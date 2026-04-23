@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Crunchley</title>
+  <desc id="desc">Crunchley healthy roasted makhana snacks</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="55%" stop-color="#FAF3E3" />
+      <stop offset="100%" stop-color="#F2E5CC" />
+    </linearGradient>
+    <linearGradient id="pill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFE45A" />
+      <stop offset="55%" stop-color="#FFD52A" />
+      <stop offset="100%" stop-color="#FFC400" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="300" y="220" width="600" height="190" rx="95" fill="url(#pill)" stroke="#E6C96A" stroke-width="4" />
+  <text x="600" y="345" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-size="120" font-weight="900" fill="#151312" letter-spacing="-2">Crunchley</text>
+</svg>

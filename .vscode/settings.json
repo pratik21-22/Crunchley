@@ -1,0 +1,15 @@
+{
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
+  "files.exclude": {
+    "**/.next": true
+  },
+  "search.exclude": {
+    "**/.next": true
+  },
+  "javascript.validate.excludedFiles": [
+    "**/.next/**/*"
+  ],
+  "typescript.validate.excludedFiles": [
+    "**/.next/**/*"
+  ]
+}
