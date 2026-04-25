@@ -27,12 +27,12 @@ export function Logo({
     "inline-flex items-center justify-center rounded-full border border-[#E6C96A] bg-linear-to-b from-[#FFE45A] via-[#FFD52A] to-[#FFC400] px-4 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_20px_rgba(245,166,35,0.22)]"
 
   const baseTextClass =
-    "text-[#151312] font-extrabold tracking-normal leading-none select-none antialiased [font-kerning:none] [font-variant-ligatures:none]"
+    "text-[#151312] font-sans font-extrabold tracking-normal leading-none select-none antialiased [font-kerning:none] [font-variant-ligatures:none]"
 
   const content = (
     <span aria-label={ariaLabel} className={cn(baseContainerClass, containerClassName, className)}>
       <span className={cn(baseTextClass, "inline-flex items-baseline", textClassName)}>
-        <span className="[font-family:Arial,Helvetica,sans-serif] font-black">{brandLead}</span>
+        <span className="font-black">{brandLead}</span>
         <span>{brandTail}</span>
       </span>
     </span>
@@ -64,8 +64,8 @@ export function LogoMobile() {
   return (
     <Logo
       href={undefined}
-      containerClassName="h-9 px-3.5"
-      textClassName="text-[1.55rem]"
+      containerClassName="h-10 px-4"
+      textClassName="text-[1.5rem]"
       className="group-hover:brightness-[1.03] transition-all duration-200"
     />
   )
