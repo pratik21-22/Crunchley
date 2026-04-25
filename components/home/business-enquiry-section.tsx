@@ -12,11 +12,11 @@ const benefits = [
 ]
 
 export function BusinessEnquirySection({
-  contactEmail = "support@crunchley.in",
-  contactPhone = "+91 90000 00000",
+  contactEmail = "infocrunchley@gmail.com",
+  contactPhones = ["+91 8102763281", "+91 748883776", "+91 7644983784"],
 }: {
   contactEmail?: string
-  contactPhone?: string
+  contactPhones?: string[]
 }) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -107,12 +107,14 @@ export function BusinessEnquirySection({
                 </div>
                 <span className="text-[14px] font-semibold text-slate-700 transition-colors group-hover:text-[#D4900A]">{contactEmail}</span>
               </a>
-              <a href={`tel:${contactPhone.replace(/\s+/g, "")}`} className="group flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white bg-white/80 shadow-sm transition-colors group-hover:bg-amber-50">
-                  <Phone className="h-4 w-4 text-amber-600" />
-                </div>
-                <span className="text-[14px] font-semibold text-slate-700 transition-colors group-hover:text-[#D4900A]">{contactPhone}</span>
-              </a>
+              {contactPhones.map((phone, index) => (
+                <a key={index} href={`tel:${phone.replace(/\s+/g, "")}`} className="group flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white bg-white/80 shadow-sm transition-colors group-hover:bg-amber-50">
+                    <Phone className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <span className="text-[14px] font-semibold text-slate-700 transition-colors group-hover:text-[#D4900A]">{phone}</span>
+                </a>
+              ))}
             </div>
 
             <div className="flex flex-col gap-2.5 rounded-2xl border border-amber-100 bg-white/70 p-5 backdrop-blur-sm">

@@ -27,9 +27,9 @@ const links = {
 export function Footer() {
   const { settings, loading } = useSiteSettings()
 
-  const footerEmail = "infocrunchley@gmail.com"
-  const footerPhone = "8102763281"
-  const footerAddress = "Anandpuri Ward No. 23, Shivpuri, Purnia, Bihar 854301"
+  const footerEmail = settings?.supportEmail || "infocrunchley@gmail.com"
+  const footerPhone = settings?.supportPhones?.[0] || "8102763281"
+  const footerAddress = settings?.supportAddress || "Anandpuri Ward No. 23, Shivpuri, Purnia, Bihar 854301"
 
   const socialLinks = [
     { icon: Instagram, href: "https://www.instagram.com/crunchley_india/", label: "Instagram" },

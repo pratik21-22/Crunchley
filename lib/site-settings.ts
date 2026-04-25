@@ -1,7 +1,7 @@
 export type SiteSettings = {
   storeName: string
   supportEmail: string
-  supportPhone: string
+  supportPhones: string[]
   supportAddress: string
   shippingNote: string
   tagline: string
@@ -20,8 +20,8 @@ export const SITE_SETTINGS_KEY = "global"
 
 export const defaultSiteSettings: SiteSettings = {
   storeName: "Crunchley",
-  supportEmail: "support@crunchley.in",
-  supportPhone: "+91 90000 00000",
+  supportEmail: "infocrunchley@gmail.com",
+  supportPhones: ["+91 8102763281", "+91 748883776", "+91 7644983784"],
   supportAddress: "India, serving pan-India online orders",
   shippingNote: "Orders are dispatched within 24-48 hours across India.",
   tagline: "Roasted, not fried. Guilt-free snacking made irresistibly delicious.",

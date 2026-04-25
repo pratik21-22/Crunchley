@@ -42,11 +42,15 @@ export default async function ContactPage() {
               <p className="mt-1 text-sm text-slate-500">{settings.supportEmail}</p>
             </a>
 
-            <a href={`tel:${settings.supportPhone.replace(/\s+/g, "")}`} className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)]">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)]">
               <Phone className="h-5 w-5 text-amber-600" />
               <p className="mt-3 text-sm font-bold text-[#1c1917]">Phone</p>
-              <p className="mt-1 text-sm text-slate-500">{settings.supportPhone}</p>
-            </a>
+              {settings.supportPhones.map((phone, index) => (
+                <a key={index} href={`tel:${phone.replace(/\s+/g, "")}`} className="block mt-1 text-sm text-slate-500 hover:text-amber-600">
+                  {phone}
+                </a>
+              ))}
+            </div>
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
               <MapPin className="h-5 w-5 text-amber-600" />

@@ -12,7 +12,7 @@ const siteSettingsSchema = new Schema<SiteSettingsDocument>(
     key: { type: String, required: true, unique: true, default: SITE_SETTINGS_KEY },
     storeName: { type: String, required: true, default: defaultSiteSettings.storeName },
     supportEmail: { type: String, required: true, default: defaultSiteSettings.supportEmail },
-    supportPhone: { type: String, required: true, default: defaultSiteSettings.supportPhone },
+    supportPhones: { type: [String], required: true, default: defaultSiteSettings.supportPhones },
     supportAddress: { type: String, required: true, default: defaultSiteSettings.supportAddress },
     shippingNote: { type: String, required: true, default: defaultSiteSettings.shippingNote },
     tagline: { type: String, required: true, default: defaultSiteSettings.tagline },

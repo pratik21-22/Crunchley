@@ -38,7 +38,7 @@ export default async function HomePage() {
       <HeroSection tagline={settings.tagline} />
       <FeaturedProducts />
       <ShopByFlavour />
-      <BusinessEnquirySection contactEmail={settings.supportEmail} contactPhone={settings.supportPhone} />
+      <BusinessEnquirySection contactEmail={settings.supportEmail} contactPhones={settings.supportPhones} />
     </div>
   )
 }

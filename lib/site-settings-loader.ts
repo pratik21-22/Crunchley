@@ -6,6 +6,13 @@ function sanitizeString(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback
 }
 
+function sanitizeStringArray(value: unknown, fallback: string[]): string[] {
+  if (Array.isArray(value) && value.every(item => typeof item === "string" && item.trim())) {
+    return value.map(item => item.trim())
+  }
+  return fallback
+}
+
 function sanitizeBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback
 }
@@ -14,7 +21,7 @@ export function normalizeSiteSettings(value: Partial<SiteSettingsType> | null | 
   return {
     storeName: sanitizeString(value?.storeName, defaultSiteSettings.storeName),
     supportEmail: sanitizeString(value?.supportEmail, defaultSiteSettings.supportEmail),
-    supportPhone: sanitizeString(value?.supportPhone, defaultSiteSettings.supportPhone),
+    supportPhones: sanitizeStringArray(value?.supportPhones, defaultSiteSettings.supportPhones),
     supportAddress: sanitizeString(value?.supportAddress, defaultSiteSettings.supportAddress),
     shippingNote: sanitizeString(value?.shippingNote, defaultSiteSettings.shippingNote),
     tagline: sanitizeString(value?.tagline, defaultSiteSettings.tagline),

@@ -4,6 +4,7 @@ import { Outfit } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { LaunchShell } from "@/components/layout/launch-shell"
+import { WhatsAppButton } from "@/components/common/whatsapp-button"
 import { absoluteUrl, canonicalUrl, SITE_NAME } from "@/lib/seo"
 
 const outfit = Outfit({
@@ -74,6 +75,7 @@ export default function RootLayout({
           <LaunchShell />
         </Suspense>
         {children}
+        <WhatsAppButton />
         <Toaster richColors position="top-right" />
       </body>
     </html>

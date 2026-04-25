@@ -101,11 +101,13 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="supportPhone">Support Phone</Label>
-              <Input
-                id="supportPhone"
-                value={settings.supportPhone}
-                onChange={(event) => updateField("supportPhone", event.target.value)}
+              <Label htmlFor="supportPhones">Support Phones</Label>
+              <Textarea
+                id="supportPhones"
+                value={settings.supportPhones.join('\n')}
+                onChange={(event) => updateField("supportPhones", event.target.value.split('\n').filter(phone => phone.trim()))}
+                placeholder="Enter one phone number per line"
+                rows={3}
               />
             </div>
 

@@ -268,7 +268,7 @@ export default function AdminBusinessEnquiriesPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-amber-600" />
-                  {contact.supportPhone}
+                  {contact.supportPhones?.[0] || "No phone set"}
                 </div>
               </CardContent>
             </Card>
