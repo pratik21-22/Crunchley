@@ -21,7 +21,8 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product }: { product: ProductCardProps }) {
-  const routeParam = product.slug || product.id
+  const routeParam = product.slug
+  const productHref = routeParam ? `/products/${encodeURIComponent(routeParam)}` : "#"
   const addItem = useCartStore((state) => state.addItem)
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -49,7 +50,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     : null
 
   return (
-    <Link href={routeParam ? `/products/${routeParam}` : "#"} className="block group">
+    <Link href={productHref} className="block group">
       <div className="flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-[0_1px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 h-full">
 
         {/* Image Area */}
