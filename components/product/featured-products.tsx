@@ -6,7 +6,6 @@ const products = [
   {
     id: 1,
     name: "Classic Roasted Makhana",
-    slug: "classic-makhana",
     price: 199,
     originalPrice: 249,
     image: "/images/product-bowl.jpg",
@@ -14,7 +13,6 @@ const products = [
   {
     id: 2,
     name: "Cheese Makhana",
-    slug: "cheese-makhana",
     price: 229,
     originalPrice: 279,
     image: "/images/cheese-makhana.jpg",
@@ -22,7 +20,6 @@ const products = [
   {
     id: 3,
     name: "Pudina Makhana",
-    slug: "pudina-makhana",
     price: 219,
     originalPrice: 269,
     image: "/images/pudina-makhana.jpg",
@@ -30,7 +27,6 @@ const products = [
   {
     id: 4,
     name: "Peri Peri Makhana",
-    slug: "peri-peri-makhana",
     price: 229,
     originalPrice: 279,
     image: "/images/peri-peri-makhana.jpg",

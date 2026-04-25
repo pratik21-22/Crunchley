@@ -22,7 +22,7 @@ export interface ProductCardProps {
 
 export function ProductCard({ product }: { product: ProductCardProps }) {
   const routeParam = product.slug
-  const productHref = routeParam ? `/products/${encodeURIComponent(routeParam)}` : "#"
+  const productHref = routeParam ? `/products/${encodeURIComponent(routeParam)}` : "/products"
   const addItem = useCartStore((state) => state.addItem)
 
   const handleAddToCart = (e: React.MouseEvent) => {
