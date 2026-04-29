@@ -67,6 +67,14 @@ const FULFILLMENT_OPTIONS: Array<{ label: string; value: FulfillmentStatus | "al
   { label: "Cancelled", value: "cancelled" },
 ]
 
+const FULFILLMENT_STATUS_OPTIONS: Array<{ label: string; value: FulfillmentStatus }> = [
+  { label: "Placed", value: "placed" },
+  { label: "Packed", value: "packed" },
+  { label: "Shipped", value: "shipped" },
+  { label: "Delivered", value: "delivered" },
+  { label: "Cancelled", value: "cancelled" },
+]
+
 const SORT_OPTIONS = [
   { label: "Newest", value: "newest" },
   { label: "Oldest", value: "oldest" },
@@ -408,7 +416,7 @@ export function OrdersTable() {
                 <TableHead>Payment Status</TableHead>
                 <TableHead>Fulfillment</TableHead>
                 <TableHead className="hidden lg:table-cell">Created</TableHead>
-                <TableHead className="w-20 text-right">Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -479,20 +487,25 @@ export function OrdersTable() {
                         <Select
                           value={order.fulfillmentStatus}
                           onValueChange={(value) => requestFulfillmentChange(order, value as FulfillmentStatus)}
-                          disabled={allowedTransitions.length === 0}
                         >
                           <SelectTrigger className="h-8 min-w-34">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={order.fulfillmentStatus}>
-                              {toTitleCase(order.fulfillmentStatus)}
-                            </SelectItem>
-                            {allowedTransitions.map((status) => (
-                              <SelectItem key={`${order.id}-${status}`} value={status}>
-                                {toTitleCase(status)}
-                              </SelectItem>
-                            ))}
+                            {FULFILLMENT_STATUS_OPTIONS.map((option) => {
+                              const isSelected = order.fulfillmentStatus === option.value
+                              const isAllowed = isSelected || allowedTransitions.includes(option.value)
+
+                              return (
+                                <SelectItem
+                                  key={`${order.id}-${option.value}`}
+                                  value={option.value}
+                                  disabled={!isAllowed}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              )
+                            })}
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -500,16 +513,18 @@ export function OrdersTable() {
                         {formatDate(order.createdAt)}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="icon-sm" onClick={() => setSelectedOrderId(order.id)}>
+                        <Button variant="ghost" size="sm" className="inline-flex items-center gap-2" onClick={() => setSelectedOrderId(order.id)}>
                           <Eye className="h-4 w-4" />
+                          View
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon-sm"
-                          className="text-destructive"
+                          size="sm"
+                          className="inline-flex items-center gap-2 text-destructive"
                           onClick={() => requestOrderDelete(order.id)}
                         >
                           <Trash2 className="h-4 w-4" />
+                          Delete
                         </Button>
                       </TableCell>
                     </TableRow>

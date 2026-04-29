@@ -1,17 +1,10 @@
 import type { Metadata } from "next"
 import React, { Suspense } from "react"
-import { Outfit } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { LaunchShell } from "@/components/layout/launch-shell"
 import { WhatsAppButton } from "@/components/common/whatsapp-button"
 import { absoluteUrl, canonicalUrl, SITE_NAME } from "@/lib/seo"
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   title: {
@@ -70,7 +63,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${outfit.variable} font-sans antialiased`}>
+      <body suppressHydrationWarning className="font-sans antialiased">
         <Suspense fallback={null}>
           <LaunchShell />
         </Suspense>
