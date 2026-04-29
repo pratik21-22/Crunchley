@@ -209,10 +209,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 })
     }
 
-    const currentFulfillment = getSafeStatuses(order).fulfillmentStatus as FulfillmentStatus
+    const currentFulfillment = getSafeStatuses(order).fulfillmentStatus
 
     if (nextFulfillment && nextFulfillment !== currentFulfillment) {
-      const allowed = FULFILLMENT_FLOW[currentFulfillment] || []
+      const allowed = FULFILLMENT_FLOW[currentFulfillment as keyof typeof FULFILLMENT_FLOW] || []
       if (!allowed.includes(nextFulfillment)) {
         return NextResponse.json(
           {
@@ -227,6 +227,28 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
       if (nextFulfillment === "cancelled") {
         order.status = "cancelled"
+      }
+
+      // Smart payment automation for COD orders
+      if (order.paymentMethod === "cod") {
+        if (nextFulfillment === "delivered") {
+          // COD order marked as delivered - auto mark payment as paid
+          if (order.paymentStatus !== "paid") {
+            order.paymentStatus = "paid"
+            order.status = "paid"
+            order.paidAt = order.paidAt || new Date()
+            order.paymentError = undefined
+          }
+        } else if (currentFulfillment === "delivered" && String(nextFulfillment) !== "delivered") {
+          // COD order moved away from delivered - revert payment to pending
+          if (order.paymentStatus === "paid") {
+            order.paymentStatus = "pending"
+            if (order.status === "paid") {
+              order.status = "placed"
+            }
+            order.paidAt = undefined
+          }
+        }
       }
     }
 
