@@ -52,26 +52,27 @@ export function AuthForm({ mode }: AuthFormProps) {
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup"
       const payload = isLogin
         ? {
-            identifier: formData.email,
+            identifier: formData.email.trim(),
             password: formData.password,
             rememberMe: formData.rememberMe,
           }
         : {
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
+            name: formData.name.trim(),
+            phone: formData.phone.trim(),
+            email: formData.email.trim(),
             password: formData.password,
           }
 
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify(payload),
       })
 
       const json = await res.json()
       if (!res.ok || !json?.success) {
-        throw new Error(json?.error || "Authentication failed")
+        throw new Error(typeof json?.error === "string" ? json.error : "Authentication failed")
       }
 
       toast.success(isLogin ? "Logged in successfully" : "Account created successfully")
@@ -80,7 +81,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         user_role: json?.data?.role || "user",
       })
       const destination = isLogin && json?.data?.role === "admin" ? "/admin/dashboard" : redirectTo
-      router.push(destination)
+      await router.push(destination)
       router.refresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Authentication failed"
