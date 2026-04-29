@@ -33,7 +33,7 @@ export async function GET() {
     let passwordTest = null
     if (admin?.passwordHash) {
       try {
-        passwordTest = await bcrypt.compare(adminPassword, admin.passwordHash)
+        passwordTest = bcrypt.compareSync(adminPassword, admin.passwordHash)
       } catch (bcryptError) {
         passwordTest = `bcrypt error: ${bcryptError instanceof Error ? bcryptError.message : bcryptError}`
       }
@@ -49,9 +49,9 @@ export async function GET() {
       error: null as string | null,
     }
 
-    if (loginUser) {
+    if (loginUser && loginUser.passwordHash) {
       try {
-        loginSimulation.passwordValid = await bcrypt.compare(adminPassword, loginUser.passwordHash)
+        loginSimulation.passwordValid = bcrypt.compareSync(adminPassword, loginUser.passwordHash)
       } catch (error) {
         loginSimulation.error = error instanceof Error ? error.message : String(error)
       }

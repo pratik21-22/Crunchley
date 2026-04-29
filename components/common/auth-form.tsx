@@ -4,12 +4,14 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2, Mail, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { OTPAuthForm } from "@/components/common/otp-auth-form"
 import { LogoAuth } from "@/components/common/logo"
 import { trackEvent } from "@/lib/analytics"
 
@@ -112,8 +114,21 @@ export function AuthForm({ mode }: AuthFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="px-5 pb-6 pt-0 sm:px-8 sm:pb-8">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          {/* Google Login Button */}
+        <Tabs defaultValue="email" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="email" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Email
+            </TabsTrigger>
+            <TabsTrigger value="phone" className="flex items-center gap-2">
+              <Phone className="h-4 w-4" />
+              Phone
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="email" className="space-y-4 sm:space-y-5 mt-0">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              {/* Google Login Button */}
           <Button
             type="button"
             variant="outline"
@@ -308,6 +323,12 @@ export function AuthForm({ mode }: AuthFormProps) {
               "Create account"
             )}
           </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="phone" className="mt-0">
+            <OTPAuthForm onSwitchToEmail={() => {}} />
+          </TabsContent>
 
           {/* Switch Mode Link */}
           <p className="pt-1 text-center text-sm leading-6 text-muted-foreground sm:pt-2">
@@ -319,7 +340,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               {isLogin ? "Sign up" : "Sign in"}
             </Link>
           </p>
-        </form>
+        </Tabs>
       </CardContent>
     </Card>
   )

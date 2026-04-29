@@ -6,5 +6,8 @@ declare global {
       open: () => void
       on: (event: string, handler: (response: unknown) => void) => void
     }
+    firebaseApp?: any
+    firebaseAuth?: any
+    recaptchaVerifier?: any
   }
 }

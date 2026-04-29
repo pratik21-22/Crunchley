@@ -6,7 +6,9 @@ export interface IUser extends Document {
   name: string
   email: string
   phone?: string
-  passwordHash: string
+  passwordHash?: string // Optional for phone auth users
+  firebaseUid?: string // Firebase UID for phone auth
+  isPhoneVerified?: boolean
   role: UserRole
   createdAt: Date
   updatedAt: Date
@@ -36,7 +38,20 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: [true, "Password hash is required"],
+      required: function (this: IUser) {
+        // Password hash is required only if not using Firebase auth
+        return !this.firebaseUid
+      },
+    },
+    firebaseUid: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,
