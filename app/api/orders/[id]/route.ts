@@ -6,11 +6,10 @@ import Order from "@/lib/models/order"
 import { normalizeGuestEmail, normalizeGuestPhone, verifyOrderAccessToken } from "@/lib/order-access"
 
 type PaymentStatus = "pending" | "paid" | "failed" | "refunded"
-type FulfillmentStatus = "placed" | "confirmed" | "packed" | "shipped" | "delivered" | "cancelled"
+type FulfillmentStatus = "placed" | "packed" | "shipped" | "delivered" | "cancelled"
 
-const FULFILLMENT_FLOW: Record<FulfillmentStatus, FulfillmentStatus[]> = {
-  placed: ["confirmed", "cancelled"],
-  confirmed: ["packed", "cancelled"],
+const FULFILLMENT_FLOW: Record<string, FulfillmentStatus[]> = {
+  placed: ["packed", "cancelled"],
   packed: ["shipped", "cancelled"],
   shipped: ["delivered"],
   delivered: [],
@@ -20,12 +19,15 @@ const FULFILLMENT_FLOW: Record<FulfillmentStatus, FulfillmentStatus[]> = {
 const PAYMENT_STATUS_VALUES = new Set(["pending", "paid", "failed", "refunded"])
 const FULFILLMENT_STATUS_VALUES = new Set([
   "placed",
-  "confirmed",
   "packed",
   "shipped",
   "delivered",
   "cancelled",
 ])
+
+function mapLegacyFulfillmentStatus(value: unknown): string {
+  return value === "confirmed" ? "placed" : String(value)
+}
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -45,9 +47,10 @@ function getSafeStatuses(order: {
       ? "failed"
       : "pending"
 
+  const requestedFulfillment = mapLegacyFulfillmentStatus(order.fulfillmentStatus)
   const fulfillmentStatus =
-    typeof order.fulfillmentStatus === "string" && FULFILLMENT_STATUS_VALUES.has(order.fulfillmentStatus)
-      ? order.fulfillmentStatus
+    typeof requestedFulfillment === "string" && FULFILLMENT_STATUS_VALUES.has(requestedFulfillment)
+      ? (requestedFulfillment as FulfillmentStatus)
       : order.status === "cancelled"
       ? "cancelled"
       : "placed"
@@ -254,6 +257,40 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to update order"
     console.error("Order update error:", error)
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  try {
+    await connectToDatabase()
+
+    const token = req.cookies.get(AUTH_COOKIE_NAME)?.value
+    const session = await verifyAuthToken(token)
+
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (session.role !== "admin") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 })
+    }
+
+    const { id } = await context.params
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, error: "Invalid order id" }, { status: 400 })
+    }
+
+    const order = await Order.findByIdAndDelete(id)
+
+    if (!order) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, data: { id } }, { status: 200 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to delete order"
+    console.error("Order delete error:", error)
     return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }

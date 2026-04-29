@@ -106,7 +106,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     fulfillmentStatus: {
       type: String,
-      enum: ["placed", "confirmed", "packed", "shipped", "delivered", "cancelled"],
+      enum: ["placed", "packed", "shipped", "delivered", "cancelled"],
       default: "placed",
       index: true,
     },

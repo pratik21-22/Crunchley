@@ -4,9 +4,9 @@ import connectToDatabase from "@/lib/db"
 import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
 import Order from "@/lib/models/order"
 
-type FulfillmentStep = "placed" | "confirmed" | "packed" | "shipped" | "delivered"
+type FulfillmentStep = "placed" | "packed" | "shipped" | "delivered" | "cancelled"
 
-const TRACKING_STEPS: FulfillmentStep[] = ["placed", "confirmed", "packed", "shipped", "delivered"]
+const TRACKING_STEPS: FulfillmentStep[] = ["placed", "packed", "shipped", "delivered", "cancelled"]
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase()

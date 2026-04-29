@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Eye, Loader2 } from "lucide-react"
+import { Eye, Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -73,7 +73,7 @@ const SORT_OPTIONS = [
   { label: "Highest Amount", value: "highest" },
 ] as const
 
-const FULFILLMENT_TRANSITIONS: Record<FulfillmentStatus, FulfillmentStatus[]> = {
+const FULFILLMENT_TRANSITIONS: Record<FulfillmentStatus | "confirmed", FulfillmentStatus[]> = {
   placed: ["packed", "cancelled"],
   confirmed: ["packed", "cancelled"],
   packed: ["shipped", "cancelled"],
@@ -128,8 +128,6 @@ function getFulfillmentBadgeClass(status: FulfillmentStatus) {
       return "border-blue-200 bg-blue-50 text-blue-700"
     case "packed":
       return "border-indigo-200 bg-indigo-50 text-indigo-700"
-    case "confirmed":
-      return "border-slate-200 bg-slate-100 text-slate-700"
     case "cancelled":
       return "border-red-200 bg-red-50 text-red-700"
     case "placed":
@@ -166,6 +164,9 @@ export function OrdersTable() {
     next: FulfillmentStatus
   } | null>(null)
   const [updating, setUpdating] = useState(false)
+
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -249,6 +250,39 @@ export function OrdersTable() {
   const requestFulfillmentChange = (order: OrderSummary, next: FulfillmentStatus) => {
     if (next === order.fulfillmentStatus) return
     setPendingUpdate({ id: order.id, current: order.fulfillmentStatus, next })
+  }
+
+  const requestOrderDelete = (orderId: string) => {
+    setDeleteOrderId(orderId)
+  }
+
+  const applyOrderDelete = async () => {
+    if (!deleteOrderId) return
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/orders/${deleteOrderId}`, {
+        method: "DELETE",
+      })
+      const payload = (await response.json()) as { success: boolean; error?: string }
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || "Failed to delete order")
+      }
+
+      toast.success("Order deleted successfully")
+      setOrders((prev) => prev.filter((order) => order.id !== deleteOrderId))
+      setTotal((prev) => Math.max(0, prev - 1))
+      if (selectedOrderId === deleteOrderId) {
+        setSelectedOrderId(null)
+      }
+      setDeleteOrderId(null)
+      fetchOrders()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete order")
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const applyFulfillmentChange = async () => {
@@ -465,9 +499,17 @@ export function OrdersTable() {
                       <TableCell className="hidden lg:table-cell text-muted-foreground">
                         {formatDate(order.createdAt)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
                         <Button variant="ghost" size="icon-sm" onClick={() => setSelectedOrderId(order.id)}>
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => requestOrderDelete(order.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -576,6 +618,30 @@ export function OrdersTable() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteOrderId} onOpenChange={(open) => !open && setDeleteOrderId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>Delete this order permanently?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOrderId(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={applyOrderDelete} disabled={deleting}>
+              {deleting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting
+                </span>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

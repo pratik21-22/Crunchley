@@ -8,12 +8,15 @@ import type { CreateOrderRequest } from "@/types"
 const PAYMENT_STATUS_VALUES = new Set(["pending", "paid", "failed", "refunded"])
 const FULFILLMENT_STATUS_VALUES = new Set([
   "placed",
-  "confirmed",
   "packed",
   "shipped",
   "delivered",
   "cancelled",
 ])
+
+function mapLegacyFulfillmentStatus(value: unknown): string {
+  return value === "confirmed" ? "placed" : String(value)
+}
 
 function parseNumber(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : NaN
@@ -38,9 +41,10 @@ function getSafeStatuses(order: {
       ? "failed"
       : "pending"
 
+  const requestedStatus = mapLegacyFulfillmentStatus(order.fulfillmentStatus)
   const fulfillmentStatus =
-    typeof order.fulfillmentStatus === "string" && FULFILLMENT_STATUS_VALUES.has(order.fulfillmentStatus)
-      ? order.fulfillmentStatus
+    typeof requestedStatus === "string" && FULFILLMENT_STATUS_VALUES.has(requestedStatus)
+      ? (requestedStatus as string)
       : order.status === "cancelled"
       ? "cancelled"
       : "placed"

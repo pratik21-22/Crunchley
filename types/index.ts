@@ -73,7 +73,7 @@ export interface VerifyPaymentRequest {
 }
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded"
-export type FulfillmentStatus = "placed" | "confirmed" | "packed" | "shipped" | "delivered" | "cancelled"
+export type FulfillmentStatus = "placed" | "packed" | "shipped" | "delivered" | "cancelled"
 
 export interface OrderSummary {
   id: string
