@@ -268,9 +268,10 @@ export function Header() {
     if (container && activeElement) {
       const containerRect = container.getBoundingClientRect()
       const elRect = activeElement.getBoundingClientRect()
+      const paddingAdjustment = 12 // px-4 py-2 padding adjustment
       setIndicatorStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
+        left: elRect.left - containerRect.left - 6,
+        width: elRect.width + paddingAdjustment,
         opacity: 1,
       })
       return
@@ -303,10 +304,11 @@ export function Header() {
         {/* DESKTOP NAV */}
         <div ref={navContainerRef} className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3 relative">
           <span
-            className="pointer-events-none absolute inset-y-0 rounded-full bg-gradient-to-r from-[#FFE082] to-[#FFC107] shadow-[0_14px_30px_rgba(255,193,7,0.22)]"
+            className="pointer-events-none absolute top-1/2 rounded-full bg-gradient-to-r from-[#FFE082] to-[#FFC107] shadow-[0_14px_30px_rgba(255,193,7,0.22)]"
             style={{
-              transform: `translateX(${indicatorStyle.left}px)`,
+              transform: `translateX(${indicatorStyle.left}px) translateY(-50%)`,
               width: indicatorStyle.width,
+              height: "48px",
               opacity: indicatorStyle.opacity,
               transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s ease, opacity 0.15s ease",
               willChange: "transform, width",
@@ -330,7 +332,7 @@ export function Header() {
               href={accountHref}
               data-nav-item="account"
               aria-label="My Account"
-              className={`${navItemClass(isAccountPage)} hidden sm:inline-flex`}
+              className={`${navItemClass(isAccountPage)} md:flex`}
             >
               <User className="h-[24px] w-[24px]" />
               <span className="sr-only">My Account</span>
@@ -350,32 +352,6 @@ export function Header() {
               )}
             </Link>
           </nav>
-
-          <div className="ml-auto flex items-center gap-2 xl:gap-3 z-10">
-            <Link
-              href={accountHref}
-              data-nav-item="account"
-              aria-label="My Account"
-              className={`${navItemClass(isAccountPage)} hidden sm:inline-flex`}
-            >
-              <User className="h-[24px] w-[24px]" />
-              <span className="sr-only">My Account</span>
-            </Link>
-
-            <Link
-              href="/cart"
-              data-nav-item="cart"
-              aria-label="Cart"
-              className={navItemClass(isCartPage)}
-            >
-              <ShoppingBag className="h-[24px] w-[24px]" />
-              {mounted && cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-[#FFC107] text-[9px] font-extrabold text-black border-2 border-white shadow-sm">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
 
           {/* Mobile hamburger */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
