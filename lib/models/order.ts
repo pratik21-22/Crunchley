@@ -78,9 +78,9 @@ const OrderItemSchema = new Schema<IOrderItem>(
 
 const OrderSchema = new Schema<IOrder>(
   {
-    userId: { type: String, trim: true, index: true },
+    userId: { type: String, trim: true, index: true, default: null },
     userName: { type: String, trim: true },
-    userEmail: { type: String, trim: true, lowercase: true },
+    userEmail: { type: String, trim: true, lowercase: true, index: true },
     customer: {
       type: OrderCustomerSchema,
       required: true,

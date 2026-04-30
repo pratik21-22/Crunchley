@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     const isAdmin = session?.role === "admin"
     const isOwner = session ? order.userId === session.userId : false
     const isGuestMatch =
-      (!session || !isOwner) &&
+      !session &&
       ((normalizedEmail && normalizedEmail === orderEmail) ||
         (normalizedPhone && normalizedPhone === orderPhone))
 

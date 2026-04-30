@@ -167,9 +167,9 @@ export async function POST(req: NextRequest) {
     const { payload } = validation
 
     const order = await Order.create({
-      userId: session?.userId,
-      userName: session?.name,
-      userEmail: session?.email,
+      userId: session?.userId || undefined,
+      userName: session?.name ?? `${payload.customer.firstName} ${payload.customer.lastName}`,
+      userEmail: session?.email ?? payload.customer.email,
       customer: payload.customer,
       items: payload.items.map((item) => ({
         productId: item.id,
