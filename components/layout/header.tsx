@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { LogoHeader, LogoMobile } from "@/components/common/logo"
 
-type NavItemId = "home" | "shop" | "bestsellers" | "flavours" | "enquiry" | "none"
+type NavItemId = "home" | "shop" | "bestsellers" | "flavours" | "enquiry" | "cart" | "account" | "none"
 
 const navigation = [
   { id: "home" as NavItemId,          name: "Home",             href: "/",                     section: null },
@@ -56,8 +56,22 @@ export function Header() {
   const router = useRouter()
   const cartCount = useCartStore((state) => state.getCartCount())
   const [activeNav, setActiveNav] = useState<NavItemId>(() =>
-    pathname.startsWith("/products") ? "shop" : pathname === "/" ? "home" : "none"
+    pathname.startsWith("/products")
+      ? "shop"
+      : pathname.startsWith("/cart")
+      ? "cart"
+      : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
+      ? "account"
+      : pathname === "/"
+      ? "home"
+      : "none"
   )
+  const navContainerRef = useRef<HTMLDivElement | null>(null)
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; opacity: number }>({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  })
   const isClickScrolling = useRef(false)
   const clickScrollTimeout = useRef<NodeJS.Timeout | null>(null)
   const [accountHref, setAccountHref] = useState("/login")
@@ -83,6 +97,16 @@ export function Header() {
       return
     }
 
+    if (pathname.startsWith("/cart")) {
+      setActiveNav("cart")
+      return
+    }
+
+    if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) {
+      setActiveNav("account")
+      return
+    }
+
     if (pathname !== "/") {
       setActiveNav("none")
       return
@@ -92,7 +116,6 @@ export function Header() {
     const sectionIds: NavItemId[] = ["home", "bestsellers", "flavours", "enquiry"]
     let ticking = false
 
-    // Initial check for hash on mount ONLY
     const hash = window.location.hash.slice(1)
     if (hash === "bestsellers" || hash === "flavours") {
       setActiveNav(hash as NavItemId)
@@ -102,7 +125,7 @@ export function Header() {
       setActiveNav("home")
     }
 
-    const sectionIdMap: Record<NavItemId, string> = {
+    const sectionIdMap: Partial<Record<NavItemId, string>> = {
       home: "home",
       shop: "shop",
       bestsellers: "bestsellers",
@@ -124,6 +147,8 @@ export function Header() {
 
       for (const navId of reversedIds) {
         const elementId = sectionIdMap[navId]
+        if (!elementId) continue
+
         const element = document.getElementById(elementId)
         if (element) {
           const { top } = element.getBoundingClientRect()
@@ -197,7 +222,6 @@ export function Header() {
     (e: React.MouseEvent, item: (typeof navigation)[number]) => {
       setIsOpen(false)
 
-      // Route links (Home, Shop): just navigate
       if (!item.section) {
         setActiveNav(item.id)
         return
@@ -231,6 +255,36 @@ export function Header() {
 
   const isAccountPage = pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
   const isCartPage = pathname.startsWith("/cart")
+
+  const navItemBaseClass =
+    "relative inline-flex items-center justify-center rounded-full px-4 py-2 h-12 text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 ease-in-out whitespace-nowrap z-10"
+  const navItemClass = (isActive: boolean) =>
+    `${navItemBaseClass} ${isActive ? "text-[#6b3e00]" : "text-[#3d3427] hover:text-[#6b3e00]"}`
+
+  const updateIndicator = () => {
+    const container = navContainerRef.current
+    const activeElement = activeNav !== "none" ? container?.querySelector<HTMLElement>(`[data-nav-item="${activeNav}"]`) : null
+
+    if (container && activeElement) {
+      const containerRect = container.getBoundingClientRect()
+      const elRect = activeElement.getBoundingClientRect()
+      setIndicatorStyle({
+        left: elRect.left - containerRect.left,
+        width: elRect.width,
+        opacity: 1,
+      })
+      return
+    }
+
+    setIndicatorStyle({ left: 0, width: 0, opacity: 0 })
+  }
+
+  useEffect(() => {
+    updateIndicator()
+    window.addEventListener("resize", updateIndicator)
+    return () => window.removeEventListener("resize", updateIndicator)
+  }, [activeNav, mounted])
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-100 w-full transition-all duration-300 ${
@@ -247,56 +301,81 @@ export function Header() {
         </Link>
 
         {/* DESKTOP NAV */}
-        <nav className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              item={item}
-              onClick={handleNavClick}
-              isActive={activeNav === item.id}
-            />
-          ))}
-        </nav>
+        <div ref={navContainerRef} className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3 relative">
+          <span
+            className="pointer-events-none absolute inset-y-0 rounded-full bg-gradient-to-r from-[#FFE082] to-[#FFC107] shadow-[0_14px_30px_rgba(255,193,7,0.22)]"
+            style={{
+              transform: `translateX(${indicatorStyle.left}px)`,
+              width: indicatorStyle.width,
+              opacity: indicatorStyle.opacity,
+              transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s ease, opacity 0.15s ease",
+              willChange: "transform, width",
+            }}
+          />
 
-        {/* ACTION ICONS */}
-        <div className="ml-auto flex min-w-fit items-center justify-end gap-2.5 lg:gap-3.5">
+          <nav className="flex items-center gap-2 xl:gap-3 z-10">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                data-nav-item={item.id}
+                onClick={(e) => handleNavClick(e, item)}
+                className={navItemClass(activeNav === item.id)}
+              >
+                {item.name}
+              </Link>
+            ))}
 
-          {/* Account */}
-          <Link href={accountHref} className="hidden sm:block">
-            <Button
-              variant="ghost"
-              size="icon"
+            <Link
+              href={accountHref}
+              data-nav-item="account"
               aria-label="My Account"
-              className={`size-[52px] rounded-full transition-all duration-200 ${
-                isAccountPage
-                  ? "bg-amber-100/80 text-[#B47406] shadow-[0_8px_20px_rgba(212,144,10,0.22)]"
-                  : "text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A]"
-              }`}
+              className={`${navItemClass(isAccountPage)} hidden sm:inline-flex`}
             >
-              <User className="h-[26px] w-[26px]" />
-            </Button>
-          </Link>
+              <User className="h-[24px] w-[24px]" />
+              <span className="sr-only">My Account</span>
+            </Link>
 
-          {/* Cart */}
-          <Link href="/cart">
-            <Button
-              variant="ghost"
-              size="icon"
+            <Link
+              href="/cart"
+              data-nav-item="cart"
               aria-label="Cart"
-              className={`relative size-[54px] sm:size-[52px] rounded-full transition-all duration-200 ${
-                isCartPage
-                  ? "bg-amber-100/80 text-[#B47406] shadow-[0_8px_20px_rgba(212,144,10,0.22)]"
-                  : "text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A]"
-              }`}
+              className={navItemClass(isCartPage)}
             >
-              <ShoppingBag className="h-[27px] w-[27px] sm:h-[26px] sm:w-[26px]" />
+              <ShoppingBag className="h-[24px] w-[24px]" />
               {mounted && cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-[#FFC107] text-[9px] font-extrabold text-black border-2 border-white shadow-sm">
                   {cartCount}
                 </span>
               )}
-            </Button>
-          </Link>
+            </Link>
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2 xl:gap-3 z-10">
+            <Link
+              href={accountHref}
+              data-nav-item="account"
+              aria-label="My Account"
+              className={`${navItemClass(isAccountPage)} hidden sm:inline-flex`}
+            >
+              <User className="h-[24px] w-[24px]" />
+              <span className="sr-only">My Account</span>
+            </Link>
+
+            <Link
+              href="/cart"
+              data-nav-item="cart"
+              aria-label="Cart"
+              className={navItemClass(isCartPage)}
+            >
+              <ShoppingBag className="h-[24px] w-[24px]" />
+              {mounted && cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-[#FFC107] text-[9px] font-extrabold text-black border-2 border-white shadow-sm">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
 
           {/* Mobile hamburger */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
