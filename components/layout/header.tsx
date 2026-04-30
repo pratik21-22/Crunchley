@@ -32,10 +32,10 @@ function NavLink({
     <Link
       href={item.href}
       onClick={(e) => onClick(e, item)}
-      className={`relative inline-flex items-center rounded-full px-4 py-2 text-[15px] font-semibold tracking-[0.01em] transition-all duration-200 whitespace-nowrap group ${
+      className={`relative inline-flex items-center rounded-full px-4 py-2 text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 ease-in-out transform whitespace-nowrap group ${
         isActive
-          ? "bg-amber-100/80 text-[#B47406] shadow-[0_8px_20px_rgba(212,144,10,0.22)]"
-          : "text-[#3d3427] hover:bg-amber-50/90 hover:text-[#D4900A] hover:shadow-[0_4px_12px_rgba(212,144,10,0.1)]"
+          ? "bg-gradient-to-r from-[#FDD835] via-[#FFC107] to-[#FFB300] text-[#6b3e00] shadow-[0_16px_40px_rgba(255,179,0,0.18)] -translate-y-0.5"
+          : "text-[#3d3427] hover:bg-amber-50/90 hover:text-[#D4900A] hover:shadow-[0_8px_24px_rgba(212,144,10,0.1)]"
       }`}
     >
       {item.name}
@@ -332,10 +332,10 @@ export function Header() {
                       key={item.id}
                       href={item.href}
                       onClick={(e) => handleNavClick(e as any, item)}
-                      className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-200 relative group ${
+                      className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 ease-in-out transform relative group ${
                         activeNav === item.id
-                          ? "bg-amber-100/80 text-[#B47406] shadow-[0_4px_12px_rgba(212,144,10,0.18)]"
-                          : "text-[#3d3427] hover:bg-amber-50/80 hover:text-[#D4900A]"
+                          ? "bg-gradient-to-r from-[#FDD835] via-[#FFC107] to-[#FFB300] text-[#6b3e00] shadow-[0_14px_30px_rgba(255,179,0,0.18)] -translate-y-0.5"
+                          : "text-[#3d3427] hover:bg-amber-50/80 hover:text-[#D4900A] hover:shadow-[0_8px_24px_rgba(212,144,10,0.1)]"
                       }`}
                     >
                       {item.name}
