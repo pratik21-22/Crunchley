@@ -75,7 +75,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  --font-sans: var(--font-primary), Inter, system-ui, sans-serif;
   --font-serif: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
@@ -117,10 +117,31 @@
 }
 
 @layer base {
+  :root {
+    --font-primary: Inter, system-ui, sans-serif;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-weight: 400;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
   }
 }

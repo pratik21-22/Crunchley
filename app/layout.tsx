@@ -1,10 +1,18 @@
 import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import React, { Suspense } from "react"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { LaunchShell } from "@/components/layout/launch-shell"
 import { WhatsAppButton } from "@/components/common/whatsapp-button"
 import { absoluteUrl, canonicalUrl, SITE_NAME } from "@/lib/seo"
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-primary",
+  weight: ["400", "500", "600", "700", "800"],
+})
 
 export const metadata: Metadata = {
   title: {
@@ -86,7 +94,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className="font-sans antialiased">
+      <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased`}>
         <Suspense fallback={null}>
           <LaunchShell />
         </Suspense>
