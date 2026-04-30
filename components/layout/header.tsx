@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { LogoHeader, LogoMobile } from "@/components/common/logo"
 
-type NavItemId = "home" | "shop" | "bestsellers" | "flavours" | "enquiry"
+type NavItemId = "home" | "shop" | "bestsellers" | "flavours" | "enquiry" | "none"
 
 const navigation = [
   { id: "home" as NavItemId,          name: "Home",             href: "/",                     section: null },
@@ -52,13 +52,15 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [activeNav, setActiveNav] = useState<NavItemId>("home")
-  const isClickScrolling = useRef(false)
-  const clickScrollTimeout = useRef<NodeJS.Timeout | null>(null)
-  const [accountHref, setAccountHref] = useState("/login")
   const pathname = usePathname()
   const router = useRouter()
   const cartCount = useCartStore((state) => state.getCartCount())
+  const [activeNav, setActiveNav] = useState<NavItemId>(() =>
+    pathname.startsWith("/products") ? "shop" : pathname === "/" ? "home" : "none"
+  )
+  const isClickScrolling = useRef(false)
+  const clickScrollTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [accountHref, setAccountHref] = useState("/login")
 
   // Scroll listener for header background
   useEffect(() => {
@@ -76,15 +78,13 @@ export function Header() {
    * 3. Checks from bottom to top to handle rapid scrolling natively.
    */
   useEffect(() => {
-    // Route-based detection: Shop page takes priority
     if (pathname.startsWith("/products")) {
       setActiveNav("shop")
       return
     }
 
-    // Not on homepage → go to home (for other pages)
     if (pathname !== "/") {
-      setActiveNav("home")
+      setActiveNav("none")
       return
     }
 
@@ -98,29 +98,27 @@ export function Header() {
       setActiveNav(hash as NavItemId)
     } else if (hash === "business-enquiry") {
       setActiveNav("enquiry")
+    } else {
+      setActiveNav("home")
     }
 
-    // Mapping from NavItemId to HTML section IDs
     const sectionIdMap: Record<NavItemId, string> = {
       home: "home",
       shop: "shop",
       bestsellers: "bestsellers",
       flavours: "flavours",
       enquiry: "business-enquiry",
+      none: "home",
     }
 
     const evaluateActiveSection = () => {
-      // Don't update active state while programmatically smooth-scrolling
       if (isClickScrolling.current) return
 
-      // Edge case: scrolled to absolute bottom of page
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
         setActiveNav("enquiry")
         return
       }
 
-      // Check sections from bottom-up
-      // First section whose top crosses the active line becomes active
       const reversedIds = [...sectionIds].reverse()
       let found = false
 
@@ -129,7 +127,6 @@ export function Header() {
         const element = document.getElementById(elementId)
         if (element) {
           const { top } = element.getBoundingClientRect()
-          // Active line is slightly below the sticky header
           if (top <= HEADER_HEIGHT + 120) {
             setActiveNav(navId)
             found = true
@@ -138,7 +135,6 @@ export function Header() {
         }
       }
 
-      // Fallback
       if (!found) setActiveNav("home")
     }
 
@@ -152,9 +148,7 @@ export function Header() {
       }
     }
 
-    // Trigger initial evaluation
     setTimeout(evaluateActiveSection, 100)
-
     window.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => {
@@ -235,6 +229,8 @@ export function Header() {
     [pathname, router]
   )
 
+  const isAccountPage = pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
+  const isCartPage = pathname.startsWith("/cart")
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-100 w-full transition-all duration-300 ${
@@ -271,7 +267,11 @@ export function Header() {
               variant="ghost"
               size="icon"
               aria-label="My Account"
-              className="size-[52px] rounded-full text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A] transition-all duration-250 hover:scale-[1.08]"
+              className={`size-[52px] rounded-full transition-all duration-200 ${
+                isAccountPage
+                  ? "bg-amber-100/80 text-[#B47406] shadow-[0_8px_20px_rgba(212,144,10,0.22)]"
+                  : "text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A]"
+              }`}
             >
               <User className="h-[26px] w-[26px]" />
             </Button>
@@ -283,7 +283,11 @@ export function Header() {
               variant="ghost"
               size="icon"
               aria-label="Cart"
-              className="relative size-[54px] sm:size-[52px] rounded-full text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A] transition-all duration-250 hover:scale-[1.08]"
+              className={`relative size-[54px] sm:size-[52px] rounded-full transition-all duration-200 ${
+                isCartPage
+                  ? "bg-amber-100/80 text-[#B47406] shadow-[0_8px_20px_rgba(212,144,10,0.22)]"
+                  : "text-[#3d3427] hover:bg-amber-100/70 hover:text-[#D4900A]"
+              }`}
             >
               <ShoppingBag className="h-[27px] w-[27px] sm:h-[26px] sm:w-[26px]" />
               {mounted && cartCount > 0 && (
