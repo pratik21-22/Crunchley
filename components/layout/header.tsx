@@ -78,8 +78,33 @@ export function Header() {
     opacity: 0,
   })
   const isClickScrolling = useRef(false)
-  const clickScrollTimeout = useRef<NodeJS.Timeout | null>(null)
   const [accountHref, setAccountHref] = useState("/login")
+
+  // Helper to determine if a nav item is active based on route and hash
+  const getActiveNavItem = useCallback((): NavItemId => {
+    const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : ""
+
+    // Non-homepage routes
+    if (pathname !== "/") {
+      if (pathname.startsWith("/products")) return "shop"
+      if (pathname.startsWith("/cart")) return "cart"
+      if (
+        pathname.startsWith("/profile") ||
+        pathname.startsWith("/account") ||
+        pathname.startsWith("/my-orders")
+      )
+        return "account"
+      return "none"
+    }
+
+    // Homepage: hash-based navigation
+    if (hash === "bestsellers") return "bestsellers"
+    if (hash === "flavours") return "flavours"
+    if (hash === "business-enquiry") return "enquiry"
+    return "home"
+  }, [pathname])
+
+  const [activeNav, setActiveNav] = useState<NavItemId>("home")
 
   // Scroll listener for header background
   useEffect(() => {
@@ -91,36 +116,31 @@ export function Header() {
   }, [])
 
   /**
-   * ROBUST ACTIVE STATE DETECTION
-   * 1. On non-homepage routes, active state is based on pathname
-   * 2. On homepage ("/"), use section detection only for hash navigation
-   * 3. Prevents incorrect "always active" states
+   * CLEAN ACTIVE STATE DETECTION
+   * - Route-based: Uses pathname for non-homepage routes
+   * - Hash-based: Uses window.location.hash for homepage only
+   * - No scroll detection
+   * - Updates on pathname or hash change
    */
   useEffect(() => {
-    // Non-homepage routes: use pathname-based detection
-    if (pathname !== "/") {
-      if (pathname.startsWith("/products")) {
-        setActiveNav("shop")
-      } else if (pathname.startsWith("/cart")) {
-        setActiveNav("cart")
-      } else if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) {
-        setActiveNav("account")
-      } else {
-        setActiveNav("none")
+    // Update on pathname change
+    setActiveNav(getActiveNavItem())
+  }, [pathname, getActiveNavItem])
+
+  // Listen for hash changes (user clicks hash link)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const handleHashChange = () => {
+      // Only update active state if on homepage
+      if (pathname === "/") {
+        setActiveNav(getActiveNavItem())
       }
-      return
     }
 
-    // Homepage: use hash or default to home
-    const hash = window.location.hash.slice(1)
-    if (hash === "bestsellers" || hash === "flavours") {
-      setActiveNav(hash as NavItemId)
-    } else if (hash === "business-enquiry") {
-      setActiveNav("enquiry")
-    } else {
-      setActiveNav("home")
-    }
-  }, [pathname])
+    window.addEventListener("hashchange", handleHashChange)
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [pathname, getActiveNavItem])
 
   // Resolve user account route
   useEffect(() => {
@@ -170,15 +190,7 @@ export function Header() {
 
       // Section links: smooth scroll if on homepage, or navigate with hash
       e.preventDefault()
-      
-      // Prevent scroll spy from updating during smooth scroll
-      isClickScrolling.current = true
       setActiveNav(item.id)
-      
-      if (clickScrollTimeout.current) clearTimeout(clickScrollTimeout.current)
-      clickScrollTimeout.current = setTimeout(() => {
-        isClickScrolling.current = false
-      }, 1000)
 
       if (pathname === "/") {
         const element = document.getElementById(item.section)
