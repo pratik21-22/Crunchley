@@ -55,22 +55,6 @@ export function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const cartCount = useCartStore((state) => state.getCartCount())
-
-  // Helper to determine if a nav item is active
-  const isNavActive = (href: string): boolean => {
-    // Exact match for home
-    if (href === "/") return pathname === "/"
-    // StartsWith match for other routes
-    return pathname.startsWith(href)
-  }
-
-  const [activeNav, setActiveNav] = useState<NavItemId>(() => {
-    if (isNavActive("/products")) return "shop"
-    if (isNavActive("/cart")) return "cart"
-    if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) return "account"
-    if (pathname === "/") return "home"
-    return "none"
-  })
   const navContainerRef = useRef<HTMLDivElement | null>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; opacity: number }>({
     left: 0,
