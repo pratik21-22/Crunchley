@@ -55,17 +55,22 @@ export function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const cartCount = useCartStore((state) => state.getCartCount())
-  const [activeNav, setActiveNav] = useState<NavItemId>(() =>
-    pathname.startsWith("/products")
-      ? "shop"
-      : pathname.startsWith("/cart")
-      ? "cart"
-      : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
-      ? "account"
-      : pathname === "/"
-      ? "home"
-      : "none"
-  )
+
+  // Helper to determine if a nav item is active
+  const isNavActive = (href: string): boolean => {
+    // Exact match for home
+    if (href === "/") return pathname === "/"
+    // StartsWith match for other routes
+    return pathname.startsWith(href)
+  }
+
+  const [activeNav, setActiveNav] = useState<NavItemId>(() => {
+    if (isNavActive("/products")) return "shop"
+    if (isNavActive("/cart")) return "cart"
+    if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) return "account"
+    if (pathname === "/") return "home"
+    return "none"
+  })
   const navContainerRef = useRef<HTMLDivElement | null>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; opacity: number }>({
     left: 0,
@@ -87,35 +92,26 @@ export function Header() {
 
   /**
    * ROBUST ACTIVE STATE DETECTION
-   * 1. Uses throttling & getBoundingClientRect for bulletproof height independence.
-   * 2. Bypasses observer when 'isClickScrolling' is true to prevent jumps.
-   * 3. Checks from bottom to top to handle rapid scrolling natively.
+   * 1. On non-homepage routes, active state is based on pathname
+   * 2. On homepage ("/"), use section detection only for hash navigation
+   * 3. Prevents incorrect "always active" states
    */
   useEffect(() => {
-    if (pathname.startsWith("/products")) {
-      setActiveNav("shop")
-      return
-    }
-
-    if (pathname.startsWith("/cart")) {
-      setActiveNav("cart")
-      return
-    }
-
-    if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) {
-      setActiveNav("account")
-      return
-    }
-
+    // Non-homepage routes: use pathname-based detection
     if (pathname !== "/") {
-      setActiveNav("none")
+      if (pathname.startsWith("/products")) {
+        setActiveNav("shop")
+      } else if (pathname.startsWith("/cart")) {
+        setActiveNav("cart")
+      } else if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) {
+        setActiveNav("account")
+      } else {
+        setActiveNav("none")
+      }
       return
     }
 
-    const HEADER_HEIGHT = 68 // h-17 in pixels
-    const sectionIds: NavItemId[] = ["home", "bestsellers", "flavours", "enquiry"]
-    let ticking = false
-
+    // Homepage: use hash or default to home
     const hash = window.location.hash.slice(1)
     if (hash === "bestsellers" || hash === "flavours") {
       setActiveNav(hash as NavItemId)
@@ -123,61 +119,6 @@ export function Header() {
       setActiveNav("enquiry")
     } else {
       setActiveNav("home")
-    }
-
-    const sectionIdMap: Partial<Record<NavItemId, string>> = {
-      home: "home",
-      shop: "shop",
-      bestsellers: "bestsellers",
-      flavours: "flavours",
-      enquiry: "business-enquiry",
-      none: "home",
-    }
-
-    const evaluateActiveSection = () => {
-      if (isClickScrolling.current) return
-
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
-        setActiveNav("enquiry")
-        return
-      }
-
-      const reversedIds = [...sectionIds].reverse()
-      let found = false
-
-      for (const navId of reversedIds) {
-        const elementId = sectionIdMap[navId]
-        if (!elementId) continue
-
-        const element = document.getElementById(elementId)
-        if (element) {
-          const { top } = element.getBoundingClientRect()
-          if (top <= HEADER_HEIGHT + 120) {
-            setActiveNav(navId)
-            found = true
-            break
-          }
-        }
-      }
-
-      if (!found) setActiveNav("home")
-    }
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          evaluateActiveSection()
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-
-    setTimeout(evaluateActiveSection, 100)
-    window.addEventListener("scroll", handleScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
     }
   }, [pathname])
 
