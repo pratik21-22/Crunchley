@@ -22,19 +22,22 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [accountHref, setAccountHref] = useState("/login")
+  const [activeSection, setActiveSection] = useState("")
 
   const pathname = usePathname()
   const cartCount = useCartStore((state) => state.getCartCount())
-  // Simple active state based on pathname
-  const getActiveNav = () => {
-    if (pathname === "/") return "home"
-    if (pathname.startsWith("/products")) return "shop"
-    if (pathname.startsWith("/flavours")) return "flavours"
-    if (pathname.startsWith("/cart")) return "cart"
-    if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) return "account"
-    return ""
-  }
-  const activeNav = getActiveNav()
+  const activeNav =
+    pathname === "/"
+      ? activeSection || "home"
+      : pathname.startsWith("/products")
+        ? "shop"
+        : pathname.startsWith("/flavours")
+          ? "flavours"
+          : pathname.startsWith("/cart")
+            ? "cart"
+            : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
+              ? "account"
+              : ""
 
 
   // Initialize and scroll listener
@@ -45,6 +48,47 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setActiveSection("")
+      return
+    }
+
+    const sectionIds = ["home", "bestsellers", "flavours", "business-enquiry"]
+    const sectionElements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((element): element is HTMLElement => Boolean(element))
+
+    if (sectionElements.length === 0) {
+      setActiveSection("home")
+      return
+    }
+
+    setActiveSection("home")
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((entry) => entry.isIntersecting)
+
+        if (visibleEntries.length === 0) {
+          return
+        }
+
+        visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        const activeId = visibleEntries[0].target.id
+        setActiveSection(activeId === "business-enquiry" ? "enquiry" : activeId)
+      },
+      {
+        threshold: [0.25, 0.5, 0.75],
+        rootMargin: "-20% 0px -55% 0px",
+      }
+    )
+
+    sectionElements.forEach((element) => observer.observe(element))
+
+    return () => observer.disconnect()
+  }, [pathname])
 
   // Resolve user account route
   useEffect(() => {
@@ -87,19 +131,19 @@ export function Header() {
   const isCartPage = pathname.startsWith("/cart")
 
   // Nav item styling
-  const navItemBaseClass = "relative inline-flex items-center h-12 px-4 rounded-full text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 whitespace-nowrap z-10"
+  const navItemBaseClass = "relative inline-flex items-center h-12 px-4 rounded-full text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 whitespace-nowrap z-10 transform"
   const navItemClass = (isActive: boolean) =>
     `${navItemBaseClass} ${
       isActive
-        ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)] font-bold"
-        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+        ? "bg-yellow-400 text-[#2c1c02] shadow-[0_12px_28px_rgba(250,204,21,0.32)] font-bold scale-110 text-[16px]"
+        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
     }`
 
   const iconClass = (isActive: boolean) =>
-    `inline-flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 z-10 ${
+    `inline-flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 z-10 transform ${
       isActive
-        ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)]"
-        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+        ? "bg-yellow-400 text-[#2c1c02] shadow-[0_12px_28px_rgba(250,204,21,0.32)] scale-110"
+        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
     }`
 
   return (
