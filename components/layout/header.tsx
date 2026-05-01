@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useCartStore } from "@/store/cart"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -18,67 +18,21 @@ const navigation = [
 ]
 
 export function Header() {
-    if (pathname !== "/") {
-      setActiveSection("")
-      return
-    }
+  const pathname = usePathname() || "/"
+  const [isOpen, setIsOpen] = useState(false)
+  const [accountHref, setAccountHref] = useState("/login")
+  const [mounted, setMounted] = useState(false)
+  const cartCount = useCartStore((s) => s.getCartCount())
+  const [scrolled, setScrolled] = useState(false)
 
-    const SECTION_IDS = ["business-enquiry", "flavours", "bestsellers"] // bottom-to-top
+  // active section for homepage only
+  const [activeSection, setActiveSection] = useState<string>("home")
 
-    const getSectionElements = () =>
-      SECTION_IDS.map((id) => ({ id, el: document.getElementById(id) as HTMLElement | null }))
+  useEffect(() => setMounted(true), [])
 
-    const handleScroll = () => {
-      const sections = getSectionElements()
-      const viewportPoint = window.scrollY + window.innerHeight * 0.4 // focus point within viewport
-
-      for (const { id, el } of sections) {
-        if (!el) continue
-        const offsetTop = el.offsetTop
-        if (viewportPoint >= offsetTop) {
-          // map DOM id to nav id
-          if (id === "business-enquiry") setActiveSection("enquiry")
-          else setActiveSection(id)
-          return
-        }
-      }
-
-      // no section matched
-      setActiveSection("home")
-    }
-
-    // run once to initialize
-    handleScroll()
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    window.addEventListener("resize", handleScroll)
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
-      window.removeEventListener("resize", handleScroll)
-    }
-          setActiveSection("home")
-          return
-        }
-
-        const mostVisibleId = visibleEntries[0].target.id
-        setActiveSection(sectionMap[mostVisibleId] || "home")
-      },
-      {
-        threshold: 0.5,
-        rootMargin: "-20% 0px -40% 0px",
-      }
-    )
-
-    sectionElements.forEach((element) => observer.observe(element))
-
-    return () => observer.disconnect()
-  }, [pathname])
-
-  // Resolve user account route
+  // resolve account route
   useEffect(() => {
     let cancelled = false
-
     const resolveAccountRoute = async () => {
       try {
         const response = await fetch("/api/auth/session", { cache: "no-store" })
@@ -86,34 +40,101 @@ export function Header() {
           if (!cancelled) setAccountHref("/login")
           return
         }
-
-        const payload = (await response.json()) as {
-          success?: boolean
-          authenticated?: boolean
-          data?: { role?: string }
-        }
+        const payload = await response.json()
         if (cancelled) return
-
-        if (!payload.success || !payload.authenticated || !payload.data) {
+        if (!payload?.success || !payload?.authenticated || !payload?.data) {
           setAccountHref("/login")
           return
         }
-
-        setAccountHref(payload?.data?.role === "admin" ? "/admin" : "/profile")
-      } catch {
+        setAccountHref(payload.data.role === "admin" ? "/admin" : "/profile")
+      } catch (e) {
         if (!cancelled) setAccountHref("/login")
       }
     }
-
     resolveAccountRoute()
     return () => {
       cancelled = true
     }
   }, [])
 
-  // Determine if on account or cart pages
+  // scrolled background toggle
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  // Active nav resolution
   const isAccountPage = pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders") || pathname.startsWith("/access-denied")
   const isCartPage = pathname.startsWith("/cart")
+
+  const activeNav = (() => {
+    if (pathname === "/") return activeSection || "home"
+    if (pathname.startsWith("/products")) return "shop"
+    if (isCartPage) return "cart"
+    if (isAccountPage) return "enquiry"
+    return ""
+  })()
+
+  // Improved scroll detection (rAF, header-aware, handles load/resize/hashchange)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    if (pathname !== "/") {
+      setActiveSection("")
+      return
+    }
+
+    const SECTION_IDS = ["business-enquiry", "flavours", "bestsellers"] // bottom-to-top order
+
+    let ticking = false
+
+    const getHeaderHeight = () => {
+      const el = document.querySelector("header") as HTMLElement | null
+      return (el?.offsetHeight ?? 72) + 8 // small buffer
+    }
+
+    const checkSections = () => {
+      const headerH = getHeaderHeight()
+      for (const id of SECTION_IDS) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        const rect = el.getBoundingClientRect()
+        if (rect.top <= headerH) {
+          if (id === "business-enquiry") setActiveSection("enquiry")
+          else setActiveSection(id)
+          return
+        }
+      }
+      setActiveSection("home")
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(() => {
+          checkSections()
+          ticking = false
+        })
+      }
+    }
+
+    // initial checks: on load, slight delay for images/layout shift
+    checkSections()
+    const initTimeout = window.setTimeout(checkSections, 200)
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", checkSections)
+    window.addEventListener("hashchange", () => setTimeout(checkSections, 50))
+
+    return () => {
+      window.clearTimeout(initTimeout)
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", checkSections)
+      window.removeEventListener("hashchange", () => setTimeout(checkSections, 50))
+    }
+  }, [pathname])
 
   // Nav item styling
   const navItemBaseClass = "relative inline-flex items-center h-12 px-4 rounded-full text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 whitespace-nowrap z-10 transform"
@@ -149,12 +170,7 @@ export function Header() {
         {/* DESKTOP NAV - CENTER */}
         <nav className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
           {navigation.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={() => setIsOpen(false)}
-              className={navItemClass(activeNav === item.id)}
-            >
+            <Link key={item.id} href={item.href} onClick={() => setIsOpen(false)} className={navItemClass(activeNav === item.id)}>
               {item.label}
             </Link>
           ))}
@@ -162,21 +178,11 @@ export function Header() {
 
         {/* ICONS - RIGHT ZONE */}
         <div className="hidden lg:flex items-center gap-2 ml-8 shrink-0">
-          <Link
-            href={accountHref}
-            aria-label="My Account"
-            className={iconClass(isAccountPage)}
-            onClick={() => setIsOpen(false)}
-          >
+          <Link href={accountHref} aria-label="My Account" className={iconClass(isAccountPage)} onClick={() => setIsOpen(false)}>
             <User className="h-5 w-5" />
           </Link>
 
-          <Link
-            href="/cart"
-            aria-label="Shopping Cart"
-            className={`${iconClass(isCartPage)} relative`}
-            onClick={() => setIsOpen(false)}
-          >
+          <Link href="/cart" aria-label="Shopping Cart" className={`${iconClass(isCartPage)} relative`} onClick={() => setIsOpen(false)}>
             <ShoppingBag className="h-5 w-5" />
             {mounted && cartCount > 0 && (
               <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#FFC107] text-[10px] font-extrabold text-black border-2 border-white shadow-sm">
@@ -190,12 +196,7 @@ export function Header() {
         <div className="lg:hidden ml-auto">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Toggle menu"
-                className="size-11 rounded-full text-[#3d3427] hover:bg-amber-100/70 transition-all"
-              >
+              <Button variant="ghost" size="icon" aria-label="Toggle menu" className="size-11 rounded-full text-[#3d3427] hover:bg-amber-100/70 transition-all">
                 {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </SheetTrigger>
@@ -227,39 +228,23 @@ export function Header() {
                       }`}
                     >
                       {item.label}
-                      {activeNav === item.id && (
-                        <span className="absolute right-4 h-2 w-2 rounded-full bg-[#D4900A]" />
-                      )}
+                      {activeNav === item.id && <span className="absolute right-4 h-2 w-2 rounded-full bg-[#D4900A]" />}
                     </Link>
                   ))}
                 </nav>
 
                 {/* Drawer footer */}
                 <div className="p-4 border-t border-amber-50 space-y-1.5">
-                  <Link
-                    href={accountHref}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all"
-                  >
+                  <Link href={accountHref} onClick={() => setIsOpen(false)} className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all">
                     <User className="h-4 w-4" />
                     My Account
                   </Link>
-                  <Link
-                    href="/cart"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all"
-                  >
+                  <Link href="/cart" onClick={() => setIsOpen(false)} className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all">
                     <ShoppingBag className="h-4 w-4" />
                     Cart
-                    {mounted && cartCount > 0 && (
-                      <span className="ml-auto bg-[#FFC107] text-[#2c1c02] text-[11px] font-extrabold px-2 py-0.5 rounded-full">
-                        {cartCount}
-                      </span>
-                    )}
+                    {mounted && cartCount > 0 && <span className="ml-auto bg-[#FFC107] text-[#2c1c02] text-[11px] font-extrabold px-2 py-0.5 rounded-full">{cartCount}</span>}
                   </Link>
-                  <p className="text-center text-[11px] text-amber-600/60 font-medium tracking-widest uppercase mt-3">
-                    Healthy Snacking Made Easy
-                  </p>
+                  <p className="text-center text-[11px] text-amber-600/60 font-medium tracking-widest uppercase mt-3">Healthy Snacking Made Easy</p>
                 </div>
 
               </div>
