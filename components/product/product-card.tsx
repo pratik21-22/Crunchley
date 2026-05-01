@@ -51,23 +51,25 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
 
   return (
     <Link href={productHref} className="block group">
-      <div className="flex flex-col h-full bg-white rounded-3xl border border-slate-200/60 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-400 ease-out">
+      <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/50 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-400 ease-out">
 
-        {/* Fixed Image Container */}
-        <div className="relative w-full h-[160px] sm:h-[200px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50">
+        {/* Fixed Image Container with Frame */}
+        <div className="relative w-full h-[160px] sm:h-[200px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50 p-3">
           {/* Discount badge */}
           {discount && (
-            <div className="absolute top-4 left-4 z-10 bg-gradient-to-br from-[#FFC107] to-[#FFB700] text-[#2c1c02] text-[12px] font-black px-3 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,193,7,0.3)] backdrop-blur-sm">
+            <div className="absolute top-4 left-4 z-10 bg-[#FFC107] text-[#2c1c02] text-[12px] font-black px-3 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,193,7,0.3)] backdrop-blur-sm">
               {discount}% OFF
             </div>
           )}
-          <Image
-            src={product.image}
-            alt={product.name}
-            width={240}
-            height={200}
-            className="object-contain h-full w-full transition-transform duration-700 group-hover:scale-110"
-          />
+          <div className="relative w-full h-full flex items-center justify-center bg-white/40 rounded-lg overflow-hidden">
+            <Image
+              src={product.image}
+              alt={product.name}
+              width={240}
+              height={200}
+              className="object-contain h-full w-full transition-transform duration-700 group-hover:scale-110 p-2"
+            />
+          </div>
         </div>
 
         {/* Product Info */}
@@ -87,12 +89,12 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           </div>
 
           {/* Price row */}
-          <div className="flex items-center gap-2.5 pt-1">
+          <div className="flex items-center gap-2.5 pt-1 flex-wrap">
             <span className="text-xl sm:text-2xl font-black text-[#1c1917] tracking-tight">₹{product.price}</span>
             {product.originalPrice && (
               <>
                 <span className="text-sm text-slate-400 line-through font-semibold">₹{product.originalPrice}</span>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-bold text-[#2c1c02] bg-[#FFC107] px-2.5 py-1 rounded-full">
                   Save ₹{product.originalPrice - product.price}
                 </span>
               </>
@@ -102,7 +104,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           {/* CTA */}
           <button
             onClick={handleAddToCart}
-            className="w-full h-12 sm:h-13 mt-auto rounded-2xl bg-gradient-to-r from-[#1c1917] to-[#2c2420] hover:from-[#FFC107] hover:to-[#FFB700] text-white hover:text-[#1c1917] font-bold text-[15px] shadow-[0_4px_12px_rgba(28,25,23,0.15)] hover:shadow-[0_8px_20px_rgba(255,193,7,0.25)] active:scale-[0.98] transition-all duration-300 ease-out flex items-center justify-center gap-2.5 flex-shrink-0"
+            className="w-full h-12 sm:h-13 mt-auto rounded-xl bg-[#1c1917] hover:bg-[#2c2420] text-white font-bold text-[15px] shadow-[0_4px_12px_rgba(28,25,23,0.15)] hover:shadow-[0_8px_20px_rgba(28,25,23,0.25)] active:scale-[0.98] transition-all duration-300 ease-out flex items-center justify-center gap-2.5 flex-shrink-0"
           >
             <ShoppingBag className="h-5 w-5" />
             <span>Add to Cart</span>
