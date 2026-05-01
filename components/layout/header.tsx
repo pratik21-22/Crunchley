@@ -53,48 +53,34 @@ export function Header() {
       return
     }
 
-    const SECTION_MAP = {
+    const sectionMap: Record<string, string> = {
       bestsellers: "bestsellers",
       flavours: "flavours",
       "business-enquiry": "enquiry",
     }
 
-    const elements = Object.entries(SECTION_MAP)
-      .map(([id]) => ({ id, element: document.getElementById(id) }))
-      .filter((item) => item.element !== null)
+    const sectionElements = ["bestsellers", "flavours", "business-enquiry"]
+      .map((id) => document.getElementById(id))
+      .filter((element): element is HTMLElement => Boolean(element))
 
-    if (elements.length === 0) {
-      setActiveSection("")
+    if (sectionElements.length === 0) {
+      setActiveSection("home")
       return
     }
 
-    const visibleSections = new Map<string, number>()
-
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            visibleSections.set(entry.target.id, entry.intersectionRatio)
-          } else {
-            visibleSections.delete(entry.target.id)
-          }
-        })
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
 
-        let mostVisibleId: string | null = null
-        let maxRatio = 0
-
-        visibleSections.forEach((ratio, id) => {
-          if (ratio > maxRatio) {
-            maxRatio = ratio
-            mostVisibleId = id
-          }
-        })
-
-        if (mostVisibleId && SECTION_MAP[mostVisibleId as keyof typeof SECTION_MAP]) {
-          setActiveSection(SECTION_MAP[mostVisibleId as keyof typeof SECTION_MAP])
-        } else {
-          setActiveSection("")
+        if (visibleEntries.length === 0) {
+          setActiveSection("home")
+          return
         }
+
+        const mostVisibleId = visibleEntries[0].target.id
+        setActiveSection(sectionMap[mostVisibleId] || "home")
       },
       {
         threshold: 0.5,
@@ -102,11 +88,7 @@ export function Header() {
       }
     )
 
-    elements.forEach((item) => {
-      if (item.element) {
-        observer.observe(item.element)
-      }
-    })
+    sectionElements.forEach((element) => observer.observe(element))
 
     return () => observer.disconnect()
   }, [pathname])
@@ -156,15 +138,15 @@ export function Header() {
   const navItemClass = (isActive: boolean) =>
     `${navItemBaseClass} ${
       isActive
-        ? "bg-yellow-400 text-[#2c1c02] shadow-[0_12px_28px_rgba(250,204,21,0.32)] font-bold scale-110 text-[16px]"
-        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
+        ? "bg-yellow-400 text-black shadow-md font-semibold scale-110 text-[16px]"
+        : "text-[#3d3427] hover:bg-yellow-100 hover:text-black hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
     }`
 
   const iconClass = (isActive: boolean) =>
     `inline-flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 z-10 transform ${
       isActive
-        ? "bg-yellow-400 text-[#2c1c02] shadow-[0_12px_28px_rgba(250,204,21,0.32)] scale-110"
-        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
+        ? "bg-yellow-400 text-black shadow-md scale-110"
+        : "text-[#3d3427] hover:bg-yellow-100 hover:text-black hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)] hover:scale-[1.03]"
     }`
 
   return (
@@ -258,8 +240,8 @@ export function Header() {
                       onClick={() => setIsOpen(false)}
                       className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
                         activeNav === item.id
-                          ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)] font-bold"
-                          : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+                          ? "bg-yellow-400 text-black shadow-md font-semibold scale-110"
+                          : "text-[#3d3427] hover:bg-yellow-100 hover:text-black hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
                       }`}
                     >
                       {item.label}
