@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useCartStore } from "@/store/cart"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -25,12 +25,11 @@ export function Header() {
 
   const pathname = usePathname()
   const cartCount = useCartStore((state) => state.getCartCount())
-  const navContainerRef = useRef<HTMLDivElement>(null)
-
   // Simple active state based on pathname
   const getActiveNav = () => {
     if (pathname === "/") return "home"
     if (pathname.startsWith("/products")) return "shop"
+    if (pathname.startsWith("/flavours")) return "flavours"
     if (pathname.startsWith("/cart")) return "cart"
     if (pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")) return "account"
     return ""
@@ -88,12 +87,20 @@ export function Header() {
   const isCartPage = pathname.startsWith("/cart")
 
   // Nav item styling
-  const navItemBaseClass = "relative inline-flex items-center h-12 px-4 rounded-full text-[15px] font-semibold tracking-[0.01em] transition-colors duration-300 whitespace-nowrap z-10"
+  const navItemBaseClass = "relative inline-flex items-center h-12 px-4 rounded-full text-[15px] font-semibold tracking-[0.01em] transition-all duration-300 whitespace-nowrap z-10"
   const navItemClass = (isActive: boolean) =>
-    `${navItemBaseClass} ${isActive ? "text-[#6b3e00]" : "text-[#3d3427] hover:text-[#6b3e00]"}`
+    `${navItemBaseClass} ${
+      isActive
+        ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)] font-bold"
+        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+    }`
 
   const iconClass = (isActive: boolean) =>
-    `inline-flex items-center justify-center h-12 w-12 rounded-full transition-colors duration-300 z-10 ${isActive ? "text-[#6b3e00]" : "text-[#3d3427] hover:text-[#6b3e00]"}`
+    `inline-flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 z-10 ${
+      isActive
+        ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)]"
+        : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+    }`
 
   return (
     <header
@@ -111,7 +118,7 @@ export function Header() {
         </Link>
 
         {/* DESKTOP NAV - CENTER */}
-        <nav ref={navContainerRef} className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
           {navigation.map((item) => (
             <Link
               key={item.id}
@@ -186,8 +193,8 @@ export function Header() {
                       onClick={() => setIsOpen(false)}
                       className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
                         activeNav === item.id
-                          ? "bg-gradient-to-r from-[#FDD835] via-[#FFC107] to-[#FFB300] text-[#6b3e00] shadow-[0_14px_30px_rgba(255,179,0,0.18)]"
-                          : "text-[#3d3427] hover:bg-amber-50/80 hover:text-[#D4900A]"
+                          ? "bg-[#FFC107]/20 text-[#6b3e00] shadow-[0_10px_24px_rgba(255,193,7,0.18)] font-bold"
+                          : "text-[#3d3427] hover:bg-amber-50 hover:text-[#6b3e00] hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
                       }`}
                     >
                       {item.label}
