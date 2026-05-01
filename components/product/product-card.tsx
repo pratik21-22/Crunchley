@@ -51,10 +51,10 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
 
   return (
     <Link href={productHref} className="block group">
-      <div className="flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-[0_1px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 h-full">
+      <div className="flex flex-col justify-between bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-[0_1px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 h-full">
 
-        {/* Image Area */}
-        <div className="relative w-full aspect-square bg-[#FAF8F3] overflow-hidden">
+        {/* Fixed Image Container */}
+        <div className="relative w-full h-[180px] bg-[#FAF8F3] overflow-hidden flex items-center justify-center">
           {/* Discount badge */}
           {discount && (
             <div className="absolute top-3 left-3 z-10 bg-[#FFC107] text-[#2c1c02] text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm">
@@ -64,14 +64,14 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           <Image
             src={product.image}
             alt={product.name}
-            fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            width={200}
+            height={180}
+            className="object-contain h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col flex-1 p-4">
+        <div className="flex flex-col justify-between flex-1 p-4">
           <h3 className="font-bold text-[#1c1917] text-[15px] leading-snug mb-1">
             {product.name}
           </h3>
@@ -87,7 +87,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           </div>
 
           {/* Price row */}
-          <div className="flex items-center gap-2 mb-4 mt-auto">
+          <div className="flex items-center gap-2 mb-4">
             <span className="text-lg font-black text-[#1c1917]">₹{product.price}</span>
             {product.originalPrice && (
               <span className="text-sm text-slate-400 line-through font-medium">₹{product.originalPrice}</span>
