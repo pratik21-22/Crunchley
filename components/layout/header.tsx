@@ -31,13 +31,11 @@ export function Header() {
       ? activeSection || "home"
       : pathname.startsWith("/products")
         ? "shop"
-        : pathname.startsWith("/flavours")
-          ? "flavours"
-          : pathname.startsWith("/cart")
-            ? "cart"
-            : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
-              ? "account"
-              : ""
+        : pathname.startsWith("/cart")
+          ? "cart"
+          : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
+            ? "account"
+            : ""
 
 
   // Initialize and scroll listener
@@ -55,37 +53,60 @@ export function Header() {
       return
     }
 
-    const sectionIds = ["home", "bestsellers", "flavours", "business-enquiry"]
-    const sectionElements = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => Boolean(element))
+    const SECTION_MAP = {
+      bestsellers: "bestsellers",
+      flavours: "flavours",
+      "business-enquiry": "enquiry",
+    }
 
-    if (sectionElements.length === 0) {
-      setActiveSection("home")
+    const elements = Object.entries(SECTION_MAP)
+      .map(([id]) => ({ id, element: document.getElementById(id) }))
+      .filter((item) => item.element !== null)
+
+    if (elements.length === 0) {
+      setActiveSection("")
       return
     }
 
-    setActiveSection("home")
+    const visibleSections = new Map<string, number>()
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleEntries = entries.filter((entry) => entry.isIntersecting)
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            visibleSections.set(entry.target.id, entry.intersectionRatio)
+          } else {
+            visibleSections.delete(entry.target.id)
+          }
+        })
 
-        if (visibleEntries.length === 0) {
-          return
+        let mostVisibleId: string | null = null
+        let maxRatio = 0
+
+        visibleSections.forEach((ratio, id) => {
+          if (ratio > maxRatio) {
+            maxRatio = ratio
+            mostVisibleId = id
+          }
+        })
+
+        if (mostVisibleId && SECTION_MAP[mostVisibleId as keyof typeof SECTION_MAP]) {
+          setActiveSection(SECTION_MAP[mostVisibleId as keyof typeof SECTION_MAP])
+        } else {
+          setActiveSection("")
         }
-
-        visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio)
-        const activeId = visibleEntries[0].target.id
-        setActiveSection(activeId === "business-enquiry" ? "enquiry" : activeId)
       },
       {
-        threshold: [0.25, 0.5, 0.75],
-        rootMargin: "-20% 0px -55% 0px",
+        threshold: 0.5,
+        rootMargin: "-20% 0px -40% 0px",
       }
     )
 
-    sectionElements.forEach((element) => observer.observe(element))
+    elements.forEach((item) => {
+      if (item.element) {
+        observer.observe(item.element)
+      }
+    })
 
     return () => observer.disconnect()
   }, [pathname])
