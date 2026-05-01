@@ -54,7 +54,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
       <div className="flex flex-col justify-between bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-[0_1px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 h-full">
 
         {/* Fixed Image Container */}
-        <div className="relative w-full h-[180px] bg-[#FAF8F3] overflow-hidden flex items-center justify-center">
+        <div className="relative w-full h-[160px] sm:h-[180px] bg-[#FAF8F3] overflow-hidden flex items-center justify-center">
           {/* Discount badge */}
           {discount && (
             <div className="absolute top-3 left-3 z-10 bg-[#FFC107] text-[#2c1c02] text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm">
@@ -71,8 +71,8 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col justify-between flex-1 p-4">
-          <h3 className="font-bold text-[#1c1917] text-[15px] leading-snug mb-1">
+        <div className="flex flex-col flex-1 p-4">
+          <h3 className="font-bold text-[#1c1917] text-[15px] leading-snug mb-1 min-h-[48px] flex items-start">
             {product.name}
           </h3>
 
@@ -97,7 +97,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           {/* CTA */}
           <button
             onClick={handleAddToCart}
-            className="w-full h-11 rounded-xl bg-[#1c1917] text-white font-bold text-[14px] shadow-sm hover:bg-[#F5A623] hover:text-[#2c1c02] active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-xl bg-[#1c1917] text-white font-bold text-[14px] shadow-sm hover:bg-[#F5A623] hover:text-[#2c1c02] active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2 mt-auto"
           >
             <ShoppingBag className="h-4 w-4" />
             Add to Cart
