@@ -18,63 +18,45 @@ const navigation = [
 ]
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [accountHref, setAccountHref] = useState("/login")
-  const [activeSection, setActiveSection] = useState("")
-
-  const pathname = usePathname()
-  const cartCount = useCartStore((state) => state.getCartCount())
-  const activeNav =
-    pathname === "/"
-      ? activeSection || "home"
-      : pathname.startsWith("/products")
-        ? "shop"
-        : pathname.startsWith("/cart")
-          ? "cart"
-          : pathname.startsWith("/profile") || pathname.startsWith("/account") || pathname.startsWith("/my-orders")
-            ? "account"
-            : ""
-
-
-  // Initialize and scroll listener
-  useEffect(() => {
-    setMounted(true)
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  useEffect(() => {
     if (pathname !== "/") {
       setActiveSection("")
       return
     }
 
-    const sectionMap: Record<string, string> = {
-      bestsellers: "bestsellers",
-      flavours: "flavours",
-      "business-enquiry": "enquiry",
-    }
+    const SECTION_IDS = ["business-enquiry", "flavours", "bestsellers"] // bottom-to-top
 
-    const sectionElements = ["bestsellers", "flavours", "business-enquiry"]
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => Boolean(element))
+    const getSectionElements = () =>
+      SECTION_IDS.map((id) => ({ id, el: document.getElementById(id) as HTMLElement | null }))
 
-    if (sectionElements.length === 0) {
+    const handleScroll = () => {
+      const sections = getSectionElements()
+      const viewportPoint = window.scrollY + window.innerHeight * 0.4 // focus point within viewport
+
+      for (const { id, el } of sections) {
+        if (!el) continue
+        const offsetTop = el.offsetTop
+        if (viewportPoint >= offsetTop) {
+          // map DOM id to nav id
+          if (id === "business-enquiry") setActiveSection("enquiry")
+          else setActiveSection(id)
+          return
+        }
+      }
+
+      // no section matched
       setActiveSection("home")
-      return
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+    // run once to initialize
+    handleScroll()
 
-        if (visibleEntries.length === 0) {
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("resize", handleScroll)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleScroll)
+    }
           setActiveSection("home")
           return
         }
