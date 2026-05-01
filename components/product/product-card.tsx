@@ -53,23 +53,22 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     <Link href={productHref} className="block group">
       <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/50 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-400 ease-out">
 
-        {/* Fixed Image Container with Frame */}
-        <div className="relative w-full h-[160px] sm:h-[200px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50 p-3">
+        {/* Fixed Image Container - Full Bleed */}
+        <div className="relative w-full h-[200px] sm:h-[240px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50">
           {/* Discount badge */}
           {discount && (
             <div className="absolute top-4 left-4 z-10 bg-[#FFC107] text-[#2c1c02] text-[12px] font-black px-3 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,193,7,0.3)] backdrop-blur-sm">
               {discount}% OFF
             </div>
           )}
-          <div className="relative w-full h-full flex items-center justify-center bg-white/40 rounded-lg overflow-hidden">
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={240}
-              height={200}
-              className="object-contain h-full w-full transition-transform duration-700 group-hover:scale-110 p-2"
-            />
-          </div>
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            priority={false}
+          />
         </div>
 
         {/* Product Info */}
