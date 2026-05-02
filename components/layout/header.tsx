@@ -160,105 +160,104 @@ export function Header() {
           : "bg-[#FFFDF8]/84 backdrop-blur-xl border-b border-amber-50/70"
       }`}
     >
-      <div className="h-17 flex items-center w-full max-w-350 mx-auto px-4 sm:px-5 lg:px-12">
+      <div className="h-17 w-full max-w-350 mx-auto">
+        <div className="flex items-center justify-between w-full px-4 md:hidden">
+          <Link href="/" className="shrink-0 flex items-center h-full" onClick={() => setIsOpen(false)}>
+            <LogoHeader />
+          </Link>
 
-        {/* LOGO */}
-        <Link href="/" className="shrink-0 flex items-center h-full" onClick={() => setIsOpen(false)}>
-          <LogoHeader />
-        </Link>
-
-        {/* DESKTOP NAV - CENTER */}
-        <nav className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
-          {navigation.map((item) => (
-            <Link key={item.id} href={item.href} onClick={() => setIsOpen(false)} className={navItemClass(activeNav === item.id)}>
-              {item.label}
+          <div className="flex items-center gap-4">
+            <Link href="/cart" aria-label="Shopping Cart" className="relative z-50" onClick={() => setIsOpen(false)}>
+              <ShoppingCart className="w-6 h-6 text-black" />
+              {mounted && cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full z-50">
+                  {cartCount}
+                </span>
+              )}
             </Link>
-          ))}
-        </nav>
 
-        {/* ICONS - RIGHT ZONE */}
-        <div className="hidden lg:flex items-center gap-2 ml-8 shrink-0">
-          <Link href={accountHref} aria-label="My Account" className={iconClass(isAccountPage)} onClick={() => setIsOpen(false)}>
-            <User className="h-5 w-5" />
-          </Link>
+            <div className="shrink-0 z-50">
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Toggle menu" className="size-11 rounded-full text-[#3d3427] hover:bg-amber-100/70 transition-all active:scale-95">
+                    {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  </Button>
+                </SheetTrigger>
 
-          <Link href="/cart" aria-label="Shopping Cart" className={iconClass(isCartPage)} onClick={() => setIsOpen(false)}>
-            <ShoppingCart className="h-5 w-5" />
-          </Link>
-        </div>
+                <SheetContent side="right" className="w-70 sm:w-[320px] p-0 border-l border-amber-100 bg-[#FFFDF8]">
+                  <SheetTitle className="sr-only">Navigation</SheetTitle>
+                  <SheetDescription className="sr-only">Primary site navigation menu</SheetDescription>
 
-        {/* MOBILE ACTIONS */}
-        <div className="flex items-center gap-3 md:hidden ml-auto shrink-0 z-50">
-          <Link
-            href="/cart"
-            aria-label="Shopping Cart"
-            className={`relative inline-flex size-11 items-center justify-center rounded-full text-black transition-all active:scale-95 z-50 ${isCartPage ? "bg-yellow-100" : "hover:bg-amber-100/70"}`}
-            onClick={() => setIsOpen(false)}
-          >
-            <ShoppingCart className="w-6 h-6" />
-            {mounted && cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md z-50">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+                  <div className="flex flex-col h-full">
 
-          {/* MOBILE MENU */}
-          <div className="shrink-0">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Toggle menu" className="size-11 rounded-full text-[#3d3427] hover:bg-amber-100/70 transition-all active:scale-95">
-                  {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent side="right" className="w-70 sm:w-[320px] p-0 border-l border-amber-100 bg-[#FFFDF8]">
-                <SheetTitle className="sr-only">Navigation</SheetTitle>
-                <SheetDescription className="sr-only">Primary site navigation menu</SheetDescription>
-
-                <div className="flex flex-col h-full">
-
-                  {/* Drawer header */}
-                  <div className="flex items-center px-5 h-16 border-b border-amber-50">
-                    <Link href="/" onClick={() => setIsOpen(false)}>
-                      <LogoMobile />
-                    </Link>
-                  </div>
-
-                  {/* Drawer nav items */}
-                  <nav className="flex-1 flex flex-col gap-1.5 p-4">
-                    {navigation.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
-                          activeNav === item.id
-                            ? "bg-yellow-400 text-black shadow-md font-semibold scale-110"
-                            : "text-[#3d3427] hover:bg-yellow-100 hover:text-black hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
-                        }`}
-                      >
-                        {item.label}
-                        {activeNav === item.id && <span className="absolute right-4 h-2 w-2 rounded-full bg-[#D4900A]" />}
+                    {/* Drawer header */}
+                    <div className="flex items-center px-5 h-16 border-b border-amber-50">
+                      <Link href="/" onClick={() => setIsOpen(false)}>
+                        <LogoMobile />
                       </Link>
-                    ))}
-                  </nav>
+                    </div>
 
-                  {/* Drawer footer */}
-                  <div className="p-4 border-t border-amber-50 space-y-1.5">
-                    <Link href={accountHref} onClick={() => setIsOpen(false)} className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all active:scale-95">
-                      <User className="h-4 w-4" />
-                      My Account
-                    </Link>
-                    <p className="text-center text-[11px] text-amber-600/60 font-medium tracking-widest uppercase mt-3">Healthy Snacking Made Easy</p>
+                    {/* Drawer nav items */}
+                    <nav className="flex-1 flex flex-col gap-1.5 p-4">
+                      {navigation.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className={`flex items-center h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
+                            activeNav === item.id
+                              ? "bg-yellow-400 text-black shadow-md font-semibold scale-110"
+                              : "text-[#3d3427] hover:bg-yellow-100 hover:text-black hover:shadow-[0_8px_20px_rgba(212,144,10,0.08)]"
+                          }`}
+                        >
+                          {item.label}
+                          {activeNav === item.id && <span className="absolute right-4 h-2 w-2 rounded-full bg-[#D4900A]" />}
+                        </Link>
+                      ))}
+                    </nav>
+
+                    {/* Drawer footer */}
+                    <div className="p-4 border-t border-amber-50 space-y-1.5">
+                      <Link href={accountHref} onClick={() => setIsOpen(false)} className="flex items-center gap-3 h-12 px-4 rounded-xl text-base font-semibold text-[#3d3427] hover:bg-amber-50/70 hover:text-[#D4900A] transition-all active:scale-95">
+                        <User className="h-4 w-4" />
+                        My Account
+                      </Link>
+                      <p className="text-center text-[11px] text-amber-600/60 font-medium tracking-widest uppercase mt-3">Healthy Snacking Made Easy</p>
+                    </div>
+
                   </div>
-
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
 
+        <div className="hidden md:flex h-full items-center px-4 sm:px-5 lg:px-12">
+          {/* LOGO */}
+          <Link href="/" className="shrink-0 flex items-center h-full" onClick={() => setIsOpen(false)}>
+            <LogoHeader />
+          </Link>
+
+          {/* DESKTOP NAV - CENTER */}
+          <nav className="hidden lg:flex flex-1 items-center justify-center gap-2 xl:gap-3">
+            {navigation.map((item) => (
+              <Link key={item.id} href={item.href} onClick={() => setIsOpen(false)} className={navItemClass(activeNav === item.id)}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* ICONS - RIGHT ZONE */}
+          <div className="hidden lg:flex items-center gap-2 ml-8 shrink-0">
+            <Link href={accountHref} aria-label="My Account" className={iconClass(isAccountPage)} onClick={() => setIsOpen(false)}>
+              <User className="h-5 w-5" />
+            </Link>
+
+            <Link href="/cart" aria-label="Shopping Cart" className={iconClass(isCartPage)} onClick={() => setIsOpen(false)}>
+              <ShoppingCart className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
       </div>
     </header>
   )
