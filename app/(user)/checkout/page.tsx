@@ -65,6 +65,28 @@ export default function CheckoutPage() {
   const clearCart = useCartStore((state) => state.clearCart)
   const checkoutTrackedRef = useRef(false)
 
+  const pendingCheckoutKey = "crunchley-pending-checkout"
+
+  const savePendingCheckout = (payload: {
+    orderId: string
+    items: Array<{ id: string; quantity: number }>
+    total: number
+  }) => {
+    try {
+      localStorage.setItem(pendingCheckoutKey, JSON.stringify(payload))
+    } catch {
+      // Ignore storage failures; checkout can still proceed.
+    }
+  }
+
+  const clearPendingCheckout = () => {
+    try {
+      localStorage.removeItem(pendingCheckoutKey)
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -282,17 +304,28 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async (data: CheckoutFormData) => {
-    if (isLoading || cartItems.length === 0) return
+    if (isLoading) return
+
+    const cartSnapshot = cartItems.map((item) => ({ ...item }))
+    if (cartSnapshot.length === 0) {
+      toast.error("Cart is empty before order creation")
+      return
+    }
 
     setCheckoutData(data)
     setIsLoading(true)
 
-    const parts = data.name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
+    const parts = data.name.trim().split(/\s+/).filter(Boolean)
     const firstName = parts[0] || "Guest"
     const lastName = parts.slice(1).join(" ") || "Customer"
+
+    const orderSubtotal = cartSnapshot.reduce((sum, item) => sum + (item.originalPrice || item.price) * item.quantity, 0)
+    const orderDiscount = cartSnapshot.reduce(
+      (sum, item) => sum + ((item.originalPrice || item.price) - item.price) * item.quantity,
+      0
+    )
+    const orderShipping = orderSubtotal - orderDiscount >= 499 ? 0 : 49
+    const orderTotal = orderSubtotal - orderDiscount + orderShipping
 
     const payload: CreateOrderRequest = {
       customer: {
@@ -305,7 +338,7 @@ export default function CheckoutPage() {
         state: "N/A",
         pincode: data.pincode.trim(),
       },
-      items: cartItems.map((item) => ({
+      items: cartSnapshot.map((item) => ({
         id: item.id,
         name: item.name,
         price: item.price,
@@ -315,18 +348,23 @@ export default function CheckoutPage() {
         slug: item.slug,
         flavor: item.flavor,
       })),
-      subtotal,
-      discount,
-      shipping,
-      total,
+      subtotal: orderSubtotal,
+      discount: orderDiscount,
+      shipping: orderShipping,
+      total: orderTotal,
       paymentMethod: data.paymentMethod,
     }
 
     try {
+      console.log("Incoming order items:", payload.items)
+
       const orderRes = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          items: cartSnapshot,
+        }),
       })
 
       const orderJson = await orderRes.json()
@@ -340,6 +378,7 @@ export default function CheckoutPage() {
 
       if (data.paymentMethod === "cod") {
         clearCart()
+        clearPendingCheckout()
         toast.success("Order placed successfully with Cash on Delivery")
         const codQuery = token
           ? `?orderId=${encodeURIComponent(appOrderId)}&guestToken=${encodeURIComponent(token)}`
@@ -366,6 +405,12 @@ export default function CheckoutPage() {
         throw new Error(paymentOrderJson?.error || "Unable to initialize payment")
       }
 
+      savePendingCheckout({
+        orderId: appOrderId,
+        items: cartSnapshot.map((item) => ({ id: item.id, quantity: item.quantity })),
+        total: orderTotal,
+      })
+
       const paymentResult = await openRazorpayCheckout({
         appOrderId,
         paymentOrder: paymentOrderJson.data as CreatePaymentOrderResponse,
@@ -375,6 +420,7 @@ export default function CheckoutPage() {
 
       if (!paymentResult.success) {
         const message = paymentResult.message || "Payment failed"
+        clearPendingCheckout()
         toast.error(message)
         router.push(
           `/order-failed?orderId=${encodeURIComponent(appOrderId)}&message=${encodeURIComponent(message)}`
@@ -383,12 +429,14 @@ export default function CheckoutPage() {
       }
 
       clearCart()
+      clearPendingCheckout()
       toast.success("Payment successful. Order confirmed!")
       const query = token
         ? `?orderId=${encodeURIComponent(appOrderId)}&guestToken=${encodeURIComponent(token)}`
         : `?orderId=${encodeURIComponent(appOrderId)}`
       router.push(`/order-success${query}`)
     } catch (error: unknown) {
+      clearPendingCheckout()
       const message = error instanceof Error ? error.message : "Order placement failed"
       toast.error(message)
       router.push(`/order-failed?message=${encodeURIComponent(message)}`)

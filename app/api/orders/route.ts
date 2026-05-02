@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
     const session = await verifyAuthToken(token)
 
     const body = await req.json()
+    console.log("Incoming order items:", Array.isArray((body as { items?: unknown }).items) ? (body as { items?: unknown }).items : [])
     const validation = validateOrderPayload(body)
 
     if (!validation.valid || !validation.payload) {
