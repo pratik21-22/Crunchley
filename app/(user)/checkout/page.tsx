@@ -339,7 +339,7 @@ export default function CheckoutPage() {
         pincode: data.pincode.trim(),
       },
       items: cartSnapshot.map((item) => ({
-        id: item.id,
+        id: item.productId || item._id || item.id,
         name: item.name,
         price: item.price,
         originalPrice: item.originalPrice,
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
-          items: cartSnapshot,
+            items: payload.items,
         }),
       })
 

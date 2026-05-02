@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics";
 
 interface ProductDetail {
   id: string
+  _id?: string
   name: string
   slug: string
   price: number
@@ -25,8 +26,11 @@ export function ProductClient({ product }: ProductClientProps) {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = (quantity: number) => {
+    const productId = product._id || product.id
     addItem({
-      id: product.id,
+      id: productId,
+      productId,
+      _id: product._id,
       name: product.name,
       price: product.price,
       image: product.image || "/placeholder.jpg",
@@ -34,7 +38,7 @@ export function ProductClient({ product }: ProductClientProps) {
     }, quantity);
     toast.success(`Added ${quantity}x ${product.name} to your cart!`);
     trackEvent("add_to_cart", {
-      item_id: product.id,
+      item_id: productId,
       item_name: product.name,
       item_category: product.category,
       price: product.price,
@@ -46,7 +50,7 @@ export function ProductClient({ product }: ProductClientProps) {
   const handleBuyNow = (quantity: number) => {
     toast.success(`Proceeding to checkout with ${quantity}x ${product.name}!`);
     trackEvent("begin_checkout", {
-      item_id: product.id,
+      item_id: productId,
       item_name: product.name,
       quantity,
       currency: "INR",

@@ -1,39 +1,14 @@
+import connectToDatabase from "@/lib/db"
+import Product from "@/lib/models/product"
 import { ProductCard } from "./product-card"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
-const products = [
-  {
-    id: 1,
-    name: "Classic Roasted Makhana",
-    price: 199,
-    originalPrice: 249,
-    image: "/images/product-bowl.jpg",
-  },
-  {
-    id: 2,
-    name: "Cheese Makhana",
-    price: 229,
-    originalPrice: 279,
-    image: "/images/cheese-makhana.jpg",
-  },
-  {
-    id: 3,
-    name: "Pudina Makhana",
-    price: 219,
-    originalPrice: 269,
-    image: "/images/pudina-makhana.jpg",
-  },
-  {
-    id: 4,
-    name: "Peri Peri Makhana",
-    price: 229,
-    originalPrice: 279,
-    image: "/images/peri-peri-makhana.jpg",
-  },
-]
+export async function FeaturedProducts() {
+  await connectToDatabase()
 
-export function FeaturedProducts() {
+  const products = await Product.find({}).sort({ createdAt: -1 }).limit(4).lean()
+
   return (
     <section id="bestsellers" className="bg-[#FFFDF8] py-16 md:py-24 border-t border-amber-50">
       <div className="container mx-auto px-5 md:px-8 lg:px-12 max-w-7xl">
@@ -57,7 +32,21 @@ export function FeaturedProducts() {
         {/* Products Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={{ ...product, id: String(product.id) }} />
+            <ProductCard
+              key={String(product._id)}
+              product={{
+                id: String(product._id),
+                _id: String(product._id),
+                name: product.name,
+                slug: product.slug,
+                price: product.price,
+                originalPrice: product.originalPrice,
+                image: product.image,
+                badge: product.badge,
+                category: product.category,
+                description: product.description,
+              }}
+            />
           ))}
         </div>
 

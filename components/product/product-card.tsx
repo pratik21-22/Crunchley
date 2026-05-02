@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics"
 
 export interface ProductCardProps {
   id: string;
+  _id?: string;
   name: string;
   slug?: string;
   price: number;
@@ -27,8 +28,11 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
+    const productId = product._id || product.id
     addItem({
-      id: product.id,
+      id: productId,
+      productId,
+      _id: product._id,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,
@@ -37,7 +41,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     })
 
     trackEvent("add_to_cart", {
-      item_id: product.id,
+      item_id: productId,
       item_name: product.name,
       item_category: product.category,
       price: product.price,

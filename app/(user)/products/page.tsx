@@ -53,9 +53,16 @@ interface ProductApiItem {
   description?: string
 }
 
+function isMongoObjectId(value: string | undefined): boolean {
+  return typeof value === "string" && /^[a-f\d]{24}$/i.test(value)
+}
+
 function normalizeProduct(item: ProductApiItem): ProductCardProps {
+  const id = item._id ?? item.id
+
   return {
-    id: item.id ?? item._id ?? item.slug ?? item.name,
+    id: isMongoObjectId(id) ? String(id) : "",
+    _id: isMongoObjectId(item._id) ? item._id : isMongoObjectId(item.id) ? item.id : undefined,
     name: item.name,
     slug: item.slug,
     price: item.price,
@@ -66,18 +73,6 @@ function normalizeProduct(item: ProductApiItem): ProductCardProps {
     description: item.description,
   }
 }
-
-// ── Static fallback ───────────────────────────────────────────────────────
-const FALLBACK: ProductCardProps[] = [
-  { id:"1", name:"Classic Roasted Makhana", slug:"classic-makhana",   price:199, originalPrice:249, image:"/images/product-bowl.jpg",      badge:"Bestseller" },
-  { id:"2", name:"Cheese Makhana",          slug:"cheese-makhana",    price:229, originalPrice:279, image:"/images/cheese-makhana.jpg",    badge:"Fan Fav"    },
-  { id:"3", name:"Pudina Makhana",          slug:"pudina-makhana",    price:219, originalPrice:269, image:"/images/pudina-makhana.jpg",    badge:null         },
-  { id:"4", name:"Peri Peri Makhana",       slug:"peri-peri-makhana", price:229, originalPrice:279, image:"/images/peri-peri-makhana.jpg", badge:"Hot Pick"   },
-  { id:"5", name:"Tomato Makhana",          slug:"tomato-makhana",    price:199, originalPrice:249, image:"/images/tomato-makhana.jpg",    badge:"Classic"    },
-  { id:"6", name:"Cream & Onion Makhana",   slug:"cream-onion",       price:229, originalPrice:269, image:"/images/cheese-makhana.jpg",    badge:null         },
-  { id:"7", name:"Salt & Pepper Makhana",   slug:"salt-pepper",       price:199, originalPrice:239, image:"/images/pudina-makhana.jpg",    badge:"Minimal"    },
-  { id:"8", name:"BBQ Makhana",             slug:"bbq-makhana",       price:239, originalPrice:289, image:"/images/peri-peri-makhana.jpg", badge:"Smoky"      },
-]
 
 export default function ShopPage() {
   const [products, setProducts] = useState<ProductCardProps[]>([])
@@ -114,10 +109,10 @@ export default function ShopPage() {
         const data = Array.isArray(json?.data)
           ? (json.data as ProductApiItem[]).map(normalizeProduct)
           : []
-        setProducts(json?.success && data.length ? data : FALLBACK)
+        setProducts(json?.success ? data.filter((item) => isMongoObjectId(item.id)) : [])
       } catch {
         clearTimeout(timeoutId)
-        setProducts(FALLBACK)
+        setProducts([])
       } finally {
         setLoading(false)
       }
@@ -126,7 +121,7 @@ export default function ShopPage() {
   }, [])
 
   const processed = useMemo(() => {
-    let list = [...products]
+    let list = products.filter((item) => isMongoObjectId(item.id))
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter((p) => p.name.toLowerCase().includes(q))

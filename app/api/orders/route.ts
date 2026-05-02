@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import mongoose from "mongoose"
 import connectToDatabase from "@/lib/db"
 import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
 import Order from "@/lib/models/order"
@@ -176,41 +177,29 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: `Invalid quantity for product ${item.id}` }, { status: 400 })
       }
 
-      // Attempt to find product by _id first
+      console.log("Incoming productId:", item.id)
+
+      if (!mongoose.Types.ObjectId.isValid(item.id)) {
+        return NextResponse.json({ success: false, error: "Invalid product ID" }, { status: 400 })
+      }
+
       const product = await Product.findById(item.id).lean()
       if (!product) {
-        // fallback: try by slug
-        const prodBySlug = await Product.findOne({ slug: item.id }).lean()
-        if (!prodBySlug) {
-          return NextResponse.json({ success: false, error: `Product not found: ${item.id}` }, { status: 400 })
-        }
-        // use prodBySlug
-        const price = Number(prodBySlug.price || 0)
-        computedSubtotal += price * quantity
-        itemsToSave.push({
-          productId: String(prodBySlug._id),
-          name: prodBySlug.name,
-          price,
-          originalPrice: (prodBySlug as any).originalPrice,
-          image: prodBySlug.image,
-          quantity,
-          slug: prodBySlug.slug,
-          flavor: item.flavor,
-        })
-      } else {
-        const price = Number(product.price || 0)
-        computedSubtotal += price * quantity
-        itemsToSave.push({
-          productId: String(product._id),
-          name: product.name,
-          price,
-          originalPrice: (product as any).originalPrice,
-          image: product.image,
-          quantity,
-          slug: product.slug,
-          flavor: item.flavor,
-        })
+        return NextResponse.json({ success: false, error: `Product not found: ${item.id}` }, { status: 400 })
       }
+
+      const price = Number(product.price || 0)
+      computedSubtotal += price * quantity
+      itemsToSave.push({
+        productId: String(product._id),
+        name: product.name,
+        price,
+        originalPrice: (product as any).originalPrice,
+        image: product.image,
+        quantity,
+        slug: product.slug,
+        flavor: item.flavor,
+      })
     }
     const computedTotal = Math.max(0, computedSubtotal - discountFromPayload + shippingFromPayload)
 
