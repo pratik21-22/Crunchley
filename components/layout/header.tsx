@@ -188,16 +188,16 @@ export function Header() {
         </div>
 
         {/* MOBILE ACTIONS */}
-        <div className="flex items-center gap-3 md:hidden ml-auto shrink-0">
+        <div className="flex items-center gap-3 md:hidden ml-auto shrink-0 z-50">
           <Link
             href="/cart"
             aria-label="Shopping Cart"
-            className={`relative inline-flex size-11 items-center justify-center rounded-full text-[#3d3427] transition-all active:scale-95 hover:bg-amber-100/70 ${isCartPage ? "bg-yellow-100 text-black" : ""}`}
+            className={`relative inline-flex size-11 items-center justify-center rounded-full text-black transition-all active:scale-95 z-50 ${isCartPage ? "bg-yellow-100" : "hover:bg-amber-100/70"}`}
             onClick={() => setIsOpen(false)}
           >
-            <ShoppingCart className="h-6 w-6" />
+            <ShoppingCart className="w-6 h-6" />
             {mounted && cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-black shadow-sm">
+              <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md z-50">
                 {cartCount}
               </span>
             )}
