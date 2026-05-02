@@ -2,7 +2,17 @@
 const nextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
+
+    // ✅ Proper external image support (Cloudinary)
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
   },
+
   async headers() {
     return [
       {
