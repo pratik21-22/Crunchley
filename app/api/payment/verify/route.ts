@@ -4,6 +4,7 @@ import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
 import Order from "@/lib/models/order"
 import { verifyRazorpaySignature } from "@/lib/payment/razorpay"
 import { normalizeGuestEmail, normalizeGuestPhone, verifyOrderAccessToken } from "@/lib/order-access"
+import { logPaymentVerified, logPaymentFailure } from "@/lib/logger"
 import type { VerifyPaymentRequest } from "@/types"
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,10 @@ export async function POST(req: NextRequest) {
       order.failedAt = new Date()
       await order.save()
 
+      logPaymentFailure("/api/payment/verify", String(order._id), session?.userId, body.failureReason, {
+        paymentMethod: body.paymentMethod,
+      })
+
       return NextResponse.json(
         {
           success: true,
@@ -97,28 +102,68 @@ export async function POST(req: NextRequest) {
       order.failedAt = new Date()
       await order.save()
 
+      logPaymentFailure("/api/payment/verify", String(order._id), session?.userId, "signature_verification_failed", {
+        razorpayOrderId,
+        razorpayPaymentId,
+      })
+
       return NextResponse.json({ success: false, error: "Invalid payment signature" }, { status: 400 })
     }
 
-    order.paymentStatus = "paid"
-    order.status = "paid"
-    order.paymentId = razorpayPaymentId
-    order.gatewayOrderId = razorpayOrderId
-    order.paymentSignature = razorpaySignature
-    if (body.paymentMethod) {
-      order.paymentMethod = body.paymentMethod
+    // Idempotency: atomically mark order paid only if not already paid.
+    // If another request already marked it paid, return success without re-processing.
+    const paidAt = new Date()
+    const updateFields: any = {
+      paymentStatus: "paid",
+      status: "paid",
+      paymentId: razorpayPaymentId,
+      gatewayOrderId: razorpayOrderId,
+      paymentSignature: razorpaySignature,
+      paymentError: undefined,
+      paidAt,
     }
-    order.paymentError = undefined
-    order.paidAt = new Date()
-    await order.save()
+    if (body.paymentMethod) {
+      updateFields.paymentMethod = body.paymentMethod
+    }
+
+    // Try to perform an atomic update only when paymentStatus is not already 'paid'
+    const updated = await Order.findOneAndUpdate(
+      { _id: order._id, paymentStatus: { $ne: "paid" } },
+      { $set: updateFields },
+      { new: true }
+    )
+
+    if (!updated) {
+      // Another caller already marked this order as paid. Reload and return existing paid info.
+      const current = await Order.findById(order._id)
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            orderId: String(order._id),
+            status: current?.status,
+            paymentId: current?.paymentId,
+            paidAt: current?.paidAt,
+          },
+        },
+        { status: 200 }
+      )
+    }
+
+    // Successfully marked as paid by this call
+    logPaymentVerified("/api/payment/verify", String(updated._id), session?.userId, updated.paymentId || razorpayPaymentId, updated.total, {
+      razorpayOrderId: updated.gatewayOrderId,
+      paymentMethod: updated.paymentMethod,
+    })
 
     return NextResponse.json(
       {
         success: true,
         data: {
-          orderId: String(order._id),
-          status: order.status,
-          paymentId: order.paymentId,
+          orderId: String(updated._id),
+          status: updated.status,
+          paymentId: updated.paymentId,
+          paidAt: updated.paidAt,
         },
       },
       { status: 200 }

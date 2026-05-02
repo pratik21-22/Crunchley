@@ -9,6 +9,7 @@ import {
   toPaise,
 } from "@/lib/payment/razorpay"
 import { normalizeGuestEmail, normalizeGuestPhone, verifyOrderAccessToken } from "@/lib/order-access"
+import { log } from "@/lib/logger"
 import type { CreatePaymentOrderRequest, CreatePaymentOrderResponse } from "@/types"
 
 export async function POST(req: NextRequest) {
@@ -72,6 +73,12 @@ export async function POST(req: NextRequest) {
     order.status = "placed"
     order.paymentError = undefined
     await order.save()
+
+    log("payment_order_created", "/api/payment/create-order", "info", session?.userId, {
+      orderId: String(order._id),
+      razorpayOrderId: razorpayOrder.id,
+      amount: order.total,
+    })
 
     const { keyId } = getRazorpayConfig()
     const publicKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || keyId

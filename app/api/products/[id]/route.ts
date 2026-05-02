@@ -1,6 +1,6 @@
 import { Types } from "mongoose"
 import { NextRequest, NextResponse } from "next/server"
-import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
+import { requireAdmin } from "@/lib/middleware"
 import connectToDatabase from "@/lib/db"
 import Product from "@/lib/models/product"
 
@@ -31,27 +31,12 @@ function toSlug(value: string): string {
     .replace(/-+/g, "-")
 }
 
-async function ensureAdmin(req: NextRequest) {
-  const token = req.cookies.get(AUTH_COOKIE_NAME)?.value
-  const session = await verifyAuthToken(token)
-
-  if (!session) {
-    return { ok: false as const, response: NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }) }
-  }
-
-  if (session.role !== "admin") {
-    return { ok: false as const, response: NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 }) }
-  }
-
-  return { ok: true as const }
-}
-
 export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
     await connectToDatabase()
 
-    const admin = await ensureAdmin(req)
-    if (!admin.ok) return admin.response
+    const auth = await requireAdmin(req)
+    if (!auth.session) return auth.response!
 
     const { id } = await context.params
 
@@ -164,8 +149,8 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
     await connectToDatabase()
 
-    const admin = await ensureAdmin(req)
-    if (!admin.ok) return admin.response
+    const auth = await requireAdmin(req)
+    if (!auth.session) return auth.response!
 
     const { id } = await context.params
 

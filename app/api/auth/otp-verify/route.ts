@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import connectToDatabase from "@/lib/db"
+import { normalizePhoneNumber } from "@/lib/phone"
 import User from "@/lib/models/user"
 import { createAuthToken } from "@/lib/auth"
+import { checkRateLimit } from "@/lib/rateLimiter"
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 3 requests per minute per IP for OTP verification
+    const rl = checkRateLimit(req, "otp-verify", 3, 60 * 1000)
+    if (!rl.ok) {
+      const headers = new Headers()
+      headers.set("Retry-After", String(rl.retryAfter || 60))
+      return NextResponse.json({ success: false, error: "Too many requests" }, { status: 429, headers })
+    }
+
     await connectToDatabase()
 
     const body = await req.json()
@@ -17,16 +27,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Normalize phone number to consistent format
+    const normalizedPhone = normalizePhoneNumber(phoneNumber)
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { success: false, error: "Invalid phone number format" },
+        { status: 400 }
+      )
+    }
+
     // Check if user already exists with this phone number
-    let user = await User.findOne({ phone: phoneNumber })
+    let user = await User.findOne({ phone: normalizedPhone })
 
     if (!user) {
       // Create new user
       user = new User({
         firebaseUid: uid,
         name: displayName || "Phone User",
-        email: email || `${phoneNumber}@phone.local`,
-        phone: phoneNumber,
+        email: email || `${normalizedPhone}@phone.local`,
+        phone: normalizedPhone,
         role: "user",
         isPhoneVerified: true,
       })

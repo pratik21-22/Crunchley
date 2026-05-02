@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import connectToDatabase from "@/lib/db"
-import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
+import { requireAdmin } from "@/lib/middleware"
 import Order from "@/lib/models/order"
 import Product from "@/lib/models/product"
 
@@ -107,16 +107,8 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase()
 
-    const token = req.cookies.get(AUTH_COOKIE_NAME)?.value
-    const session = await verifyAuthToken(token)
-
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
-    }
-
-    if (session.role !== "admin") {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 })
-    }
+    const auth = await requireAdmin(req)
+    if (!auth.session) return auth.response!
 
     const chartStart = new Date()
     chartStart.setHours(0, 0, 0, 0)

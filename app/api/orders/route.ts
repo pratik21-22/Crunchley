@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import connectToDatabase from "@/lib/db"
 import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth"
 import Order from "@/lib/models/order"
+import Product from "@/lib/models/product"
 import { createOrderAccessToken, normalizeGuestEmail, normalizeGuestPhone } from "@/lib/order-access"
+import { logOrderCreated } from "@/lib/logger"
 import type { CreateOrderRequest } from "@/types"
 
 const PAYMENT_STATUS_VALUES = new Set(["pending", "paid", "failed", "refunded"])
@@ -90,26 +92,20 @@ function validateOrderPayload(body: unknown): {
   }
 
   for (const item of payload.items) {
-    if (!item.id || !item.name || !item.image || !item.quantity || !item.price) {
-      return { valid: false, message: "Each order item must include id, name, image, quantity and price" }
+    // price MUST NOT be trusted from client; server will compute
+    if (!item.id || !item.name || !item.image || typeof item.quantity === "undefined") {
+      return { valid: false, message: "Each order item must include id, name, image and quantity" }
     }
-    if (item.quantity < 1 || item.price < 0) {
-      return { valid: false, message: "Invalid item quantity or price" }
+    if (Number(item.quantity) < 1) {
+      return { valid: false, message: "Invalid item quantity" }
     }
   }
 
-  const subtotal = parseNumber(payload.subtotal)
-  const discount = parseNumber(payload.discount)
-  const shipping = parseNumber(payload.shipping)
-  const total = parseNumber(payload.total)
-
-  if ([subtotal, discount, shipping, total].some((n) => Number.isNaN(n) || n < 0)) {
+  // Totals will be computed server-side. Accept discount and shipping if present, else default to 0
+  const discount = parseNumber(payload.discount) || 0
+  const shipping = parseNumber(payload.shipping) || 0
+  if ([discount, shipping].some((n) => Number.isNaN(n) || n < 0)) {
     return { valid: false, message: "Invalid order totals" }
-  }
-
-  const expectedTotal = Math.max(0, subtotal - discount + shipping)
-  if (Math.abs(expectedTotal - total) > 0.01) {
-    return { valid: false, message: "Order total mismatch" }
   }
 
   if (!payload.paymentMethod || typeof payload.paymentMethod !== "string") {
@@ -138,10 +134,11 @@ function validateOrderPayload(body: unknown): {
         slug: item.slug?.trim(),
         flavor: item.flavor?.trim(),
       })),
-      subtotal,
+      // totals are computed server-side; include discount/shipping if provided
+      subtotal: 0,
       discount,
       shipping,
-      total,
+      total: 0,
       paymentMethod: payload.paymentMethod.trim(),
     },
   }
@@ -166,30 +163,80 @@ export async function POST(req: NextRequest) {
 
     const { payload } = validation
 
+    const discountFromPayload = Number(payload.discount) || 0
+    const shippingFromPayload = Number(payload.shipping) || 0
+
     const order = await Order.create({
       userId: session?.userId || undefined,
       userName: session?.name ?? `${payload.customer.firstName} ${payload.customer.lastName}`,
       userEmail: session?.email ?? payload.customer.email,
       customer: payload.customer,
-      items: payload.items.map((item) => ({
-        productId: item.id,
-        name: item.name,
-        price: item.price,
-        originalPrice: item.originalPrice,
-        image: item.image,
-        quantity: item.quantity,
-        slug: item.slug,
-        flavor: item.flavor,
-      })),
-      subtotal: payload.subtotal,
-      discount: payload.discount,
-      shipping: payload.shipping,
-      total: payload.total,
+      // Build items using authoritative product prices from DB
+      items: [],
+      subtotal: 0,
+      discount: 0,
+      shipping: 0,
+      total: 0,
       paymentMethod: payload.paymentMethod,
       paymentStatus: "pending",
       fulfillmentStatus: "placed",
       status: "placed",
     })
+
+    // Validate products and compute totals (server-side authoritative)
+    let computedSubtotal = 0
+    const itemsToSave: Array<any> = []
+    for (const item of payload.items) {
+      const quantity = Number(item.quantity)
+      if (!Number.isFinite(quantity) || quantity < 1) {
+        return NextResponse.json({ success: false, error: `Invalid quantity for product ${item.id}` }, { status: 400 })
+      }
+
+      // Attempt to find product by _id first
+      const product = await Product.findById(item.id).lean()
+      if (!product) {
+        // fallback: try by slug
+        const prodBySlug = await Product.findOne({ slug: item.id }).lean()
+        if (!prodBySlug) {
+          return NextResponse.json({ success: false, error: `Product not found: ${item.id}` }, { status: 400 })
+        }
+        // use prodBySlug
+        const price = Number(prodBySlug.price || 0)
+        computedSubtotal += price * quantity
+        itemsToSave.push({
+          productId: String(prodBySlug._id),
+          name: prodBySlug.name,
+          price,
+          originalPrice: (prodBySlug as any).originalPrice,
+          image: prodBySlug.image,
+          quantity,
+          slug: prodBySlug.slug,
+          flavor: item.flavor,
+        })
+      } else {
+        const price = Number(product.price || 0)
+        computedSubtotal += price * quantity
+        itemsToSave.push({
+          productId: String(product._id),
+          name: product.name,
+          price,
+          originalPrice: (product as any).originalPrice,
+          image: product.image,
+          quantity,
+          slug: product.slug,
+          flavor: item.flavor,
+        })
+      }
+    }
+    const computedTotal = Math.max(0, computedSubtotal - discountFromPayload + shippingFromPayload)
+
+    // Update order with computed items and totals
+    order.items = itemsToSave
+    order.subtotal = computedSubtotal
+    order.discount = discountFromPayload
+    order.shipping = shippingFromPayload
+    order.total = computedTotal
+    await order.save()
 
     const guestAccessToken = !session
       ? await createOrderAccessToken({
@@ -198,6 +245,12 @@ export async function POST(req: NextRequest) {
           phone: payload.customer.phone,
         })
       : undefined
+
+    // Log order creation
+    logOrderCreated("/api/orders", String(order._id), session?.userId, computedTotal, itemsToSave.length, {
+      email: payload.customer.email,
+      phone: payload.customer.phone,
+    })
 
     return NextResponse.json(
       {

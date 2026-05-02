@@ -44,6 +44,30 @@ function printUsage() {
 async function run() {
   loadDotEnvIfPresent();
 
+  // Safety: never allow this script to run in production
+  if (process.env.NODE_ENV === "production") {
+    console.error("Refusing to run make-admin in production environment. Aborting.")
+    process.exit(1)
+  }
+
+  // Require a secret to be supplied for extra safety. This must be set in .env as MAKE_ADMIN_SECRET
+  const expectedSecret = process.env.MAKE_ADMIN_SECRET || ""
+  const providedSecret = parseArg("secret") || process.env.MAKE_ADMIN_SECRET_CLI || ""
+
+  if (!expectedSecret) {
+    console.error(
+      "MAKE_ADMIN_SECRET is not configured. Set MAKE_ADMIN_SECRET in your environment (e.g., in .env) to run this script."
+    )
+    process.exit(1)
+  }
+
+  if (providedSecret !== expectedSecret) {
+    console.error(
+      "Invalid or missing secret. Usage: MAKE_ADMIN_SECRET=<secret> npm run make-admin -- --email=admin@example.com --password=pass --secret=<secret>"
+    )
+    process.exit(1)
+  }
+
   const mongoUri = process.env.MONGO_URI;
   if (!mongoUri) {
     throw new Error("MONGO_URI is missing. Set it in .env before running make-admin.");

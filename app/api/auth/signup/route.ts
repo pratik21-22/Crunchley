@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import connectToDatabase from "@/lib/db"
 import { AUTH_COOKIE_NAME, createAuthToken, getAuthCookieConfig } from "@/lib/auth"
 import { linkGuestOrdersToUser } from "@/lib/guest-orders"
+import { normalizePhoneNumber } from "@/lib/phone"
 import User from "@/lib/models/user"
 
 interface SignupBody {
@@ -16,10 +17,6 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
-function normalizePhone(phone: string) {
-  return phone.replace(/\D/g, "")
-}
-
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase()
@@ -27,7 +24,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as SignupBody
     const name = body.name?.trim()
     const email = body.email ? normalizeEmail(body.email) : ""
-    const phone = body.phone ? normalizePhone(body.phone) : ""
+    const phone = body.phone ? normalizePhoneNumber(body.phone) : ""
     const password = body.password || ""
 
     if (!name || !email || !password) {
