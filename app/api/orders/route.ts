@@ -167,23 +167,6 @@ export async function POST(req: NextRequest) {
     const discountFromPayload = Number(payload.discount) || 0
     const shippingFromPayload = Number(payload.shipping) || 0
 
-    const order = await Order.create({
-      userId: session?.userId || undefined,
-      userName: session?.name ?? `${payload.customer.firstName} ${payload.customer.lastName}`,
-      userEmail: session?.email ?? payload.customer.email,
-      customer: payload.customer,
-      // Build items using authoritative product prices from DB
-      items: [],
-      subtotal: 0,
-      discount: 0,
-      shipping: 0,
-      total: 0,
-      paymentMethod: payload.paymentMethod,
-      paymentStatus: "pending",
-      fulfillmentStatus: "placed",
-      status: "placed",
-    })
-
     // Validate products and compute totals (server-side authoritative)
     let computedSubtotal = 0
     const itemsToSave: Array<any> = []
@@ -231,13 +214,21 @@ export async function POST(req: NextRequest) {
     }
     const computedTotal = Math.max(0, computedSubtotal - discountFromPayload + shippingFromPayload)
 
-    // Update order with computed items and totals
-    order.items = itemsToSave
-    order.subtotal = computedSubtotal
-    order.discount = discountFromPayload
-    order.shipping = shippingFromPayload
-    order.total = computedTotal
-    await order.save()
+    const order = await Order.create({
+      userId: session?.userId || undefined,
+      userName: session?.name ?? `${payload.customer.firstName} ${payload.customer.lastName}`,
+      userEmail: session?.email ?? payload.customer.email,
+      customer: payload.customer,
+      items: itemsToSave,
+      subtotal: computedSubtotal,
+      discount: discountFromPayload,
+      shipping: shippingFromPayload,
+      total: computedTotal,
+      paymentMethod: payload.paymentMethod,
+      paymentStatus: "pending",
+      fulfillmentStatus: "placed",
+      status: "placed",
+    })
 
     const guestAccessToken = !session
       ? await createOrderAccessToken({
