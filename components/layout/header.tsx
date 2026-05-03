@@ -166,17 +166,17 @@ export function Header() {
             <LogoHeader />
           </Link>
 
-          <div className="flex items-center gap-4">
-            <Link href="/cart" aria-label="Shopping Cart" className="relative z-50" onClick={() => setIsOpen(false)}>
+          <div className="flex items-center gap-4 relative z-50">
+            <Link href="/cart" aria-label="Shopping Cart" className="relative z-[60] pointer-events-auto" onClick={() => setIsOpen(false)}>
               <ShoppingCart className="w-6 h-6 text-black" />
               {mounted && cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full z-50">
+                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full z-[61]">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            <div className="shrink-0 z-50">
+            <div className="shrink-0 z-40">
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Toggle menu" className="size-11 rounded-full text-[#3d3427] hover:bg-amber-100/70 transition-all active:scale-95">
