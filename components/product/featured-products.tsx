@@ -40,7 +40,7 @@ export async function FeaturedProducts() {
                 name: product.name,
                 slug: product.slug,
                 price: product.price,
-                originalPrice: product.originalPrice ?? Math.round(product.price * 1.25),
+                originalPrice: Math.round(product.price * 1.25),
                 image: product.image,
                 badge: product.badge,
                 category: product.category,
