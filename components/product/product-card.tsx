@@ -6,6 +6,15 @@ import { useCartStore } from "@/store/cart"
 import { ShoppingBag, Star } from "lucide-react"
 import { trackEvent } from "@/lib/analytics"
 
+function toSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+}
+
 export interface ProductCardProps {
   id: string;
   _id?: string;
@@ -22,8 +31,12 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product }: { product: ProductCardProps }) {
-  const routeParam = product.slug
-  const productHref = routeParam ? `/products/${encodeURIComponent(routeParam)}` : "/products"
+  if (!product.slug) {
+    console.error("Missing slug:", product)
+  }
+
+  const routeParam = toSlug(product.slug || product.name)
+  const productHref = `/products/${encodeURIComponent(routeParam)}`
   const addItem = useCartStore((state) => state.addItem)
 
   const handleAddToCart = (e: React.MouseEvent) => {

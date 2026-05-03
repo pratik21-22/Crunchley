@@ -5,6 +5,15 @@ import { ProductClient } from "./ProductClient";
 import type { Metadata } from "next"
 import { absoluteUrl, canonicalUrl } from "@/lib/seo"
 
+function toSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+}
+
 interface ProductDetail {
   _id: string
   id: string
@@ -19,7 +28,8 @@ interface ProductDetail {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   await connectToDatabase()
-  const product = await Product.findOne({ slug: params.slug }).lean()
+  const normalizedSlug = toSlug(decodeURIComponent(params.slug || ""))
+  const product = await Product.findOne({ slug: normalizedSlug }).lean()
 
   if (!product) {
     return {
@@ -35,11 +45,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: `${product.name} | Crunchley`,
     description: product.description,
     alternates: {
-      canonical: canonicalUrl(`/products/${params.slug}`),
+      canonical: canonicalUrl(`/products/${normalizedSlug}`),
     },
     openGraph: {
       type: "website",
-      url: absoluteUrl(`/products/${params.slug}`),
+      url: absoluteUrl(`/products/${normalizedSlug}`),
       title: `${product.name} | Crunchley`,
       description: product.description,
       images: [
@@ -60,7 +70,16 @@ export default async function ProductDetailsPage({
   await connectToDatabase()
 
   // Fetch product securely from Mongoose inside the Server Component
-  const product = await Product.findOne({ slug: params.slug }).lean()
+  const normalizedSlug = toSlug(decodeURIComponent(params.slug || ""))
+  let product = await Product.findOne({ slug: normalizedSlug }).lean()
+
+  if (!product) {
+    const fallbackProducts = await Product.find({}, { name: 1, slug: 1, price: 1, image: 1, category: 1, description: 1, stock: 1 }).lean()
+    product = fallbackProducts.find((item) => toSlug(String(item.slug || item.name)) === normalizedSlug) || null
+  }
+
+  console.log("Slug:", normalizedSlug)
+  console.log("Product:", product)
 
   if (!product) {
     notFound()
@@ -99,7 +118,7 @@ export default async function ProductDetailsPage({
               priceCurrency: "INR",
               price: product.price,
               availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-              url: absoluteUrl(`/products/${params.slug}`),
+              url: absoluteUrl(`/products/${normalizedSlug}`),
             },
           }),
         }}

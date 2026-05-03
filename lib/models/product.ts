@@ -1,5 +1,14 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
+function toSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+}
+
 export interface IProduct extends Document {
   name: string;
   slug: string;
@@ -59,6 +68,16 @@ const ProductSchema = new Schema<IProduct>(
     timestamps: true, // Automatically adds updatedTs in case it's needed later
   }
 );
+
+ProductSchema.pre("validate", function (next) {
+  if (!this.slug || !this.slug.trim()) {
+    this.slug = toSlug(this.name)
+  } else {
+    this.slug = toSlug(this.slug)
+  }
+
+  next()
+})
 
 // Fallback to existing model to avoid 'OverwriteModelError' during Next.js reloads
 const Product: Model<IProduct> =
