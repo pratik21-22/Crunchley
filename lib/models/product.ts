@@ -69,14 +69,12 @@ const ProductSchema = new Schema<IProduct>(
   }
 );
 
-ProductSchema.pre("validate", function (next) {
+ProductSchema.pre("validate", function () {
   if (!this.slug || !this.slug.trim()) {
     this.slug = toSlug(this.name)
   } else {
     this.slug = toSlug(this.slug)
   }
-
-  next()
 })
 
 // Fallback to existing model to avoid 'OverwriteModelError' during Next.js reloads
