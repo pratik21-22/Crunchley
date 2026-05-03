@@ -1,7 +1,5 @@
 "use client"
 
-import { MessageCircle } from "lucide-react"
-
 export function WhatsAppButton() {
   const handleClick = () => {
     window.open('https://wa.me/918102763281', '_blank')
@@ -13,7 +11,13 @@ export function WhatsAppButton() {
       className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-all duration-300 hover:bg-green-600 hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
       aria-label="Contact us on WhatsApp"
     >
-      <MessageCircle className="h-6 w-6" />
+      <svg
+        viewBox="0 0 448 512"
+        aria-hidden="true"
+        className="h-7 w-7 fill-current"
+      >
+        <path d="M380.9 97.1c-41.9-42-97.7-65.1-157-65.1-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480 117.7 449.1c32.4 17.7 68.9 27 106.1 27l.1 0c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3 18.6-68.1-4.4-7c-18.5-29.4-28.2-63.3-28.2-98 0-102.3 83.5-185.7 186-185.7 49.6 0 96.1 19.3 130.9 54.1 34.8 34.8 54.1 81.3 54.1 130.9 0 102.3-83.5 185.7-186 185.7zm101.3-132.9c-5.5-2.8-32.7-16.1-37.8-18-5.1-1.9-8.8-2.8-12.6 2.8-3.8 5.5-14.5 18-17.8 21.7-3.3 3.8-6.5 4.2-12 1.4-5.5-2.8-23.1-8.5-44.1-27.2-16.4-14.6-27.5-32.6-30.8-38.1-3.3-5.5-.3-8.5 2.5-11.3 2.6-2.6 5.5-6.5 8.3-9.8 2.8-3.3 3.8-5.5 5.7-9.2 1.9-3.8 1-7.1-.5-9.9-1.4-2.8-12.6-30.2-17.2-41.4-4.6-11-9.2-9.5-12.6-9.7-3.3-.2-7.1-.2-10.9-.2s-9.9 1.4-15.1 7.1c-5.2 5.5-19.8 19.3-19.8 47 0 27.7 20.3 54.5 23.1 58.3 2.8 3.8 39.8 61 96.5 85.5 13.5 5.8 24.1 9.2 32.3 11.8 13.5 4.3 25.8 3.7 35.5 2.2 10.8-1.6 32.7-13.4 37.3-26.4 4.6-13.1 4.6-24.3 3.3-26.4-1.4-2.2-5.1-3.8-10.6-6.6z" />
+      </svg>
     </button>
   )
 }
