@@ -6,6 +6,9 @@ import type { Metadata } from "next"
 import { absoluteUrl, canonicalUrl } from "@/lib/seo"
 import { Types } from "mongoose"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 function toSlug(value: string): string {
   return value
     .trim()
