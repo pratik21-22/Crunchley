@@ -4,6 +4,7 @@ import Product from "@/lib/models/product"
 import { ProductClient } from "./ProductClient";
 import type { Metadata } from "next"
 import { absoluteUrl, canonicalUrl } from "@/lib/seo"
+import { Types } from "mongoose"
 
 function toSlug(value: string): string {
   return value
@@ -12,6 +13,10 @@ function toSlug(value: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
+}
+
+function isMongoObjectId(value: string): boolean {
+  return Types.ObjectId.isValid(value)
 }
 
 interface ProductDetail {
@@ -29,7 +34,9 @@ interface ProductDetail {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   await connectToDatabase()
   const normalizedSlug = toSlug(decodeURIComponent(params.slug || ""))
-  const product = await Product.findOne({ slug: normalizedSlug }).lean()
+  const product = isMongoObjectId(normalizedSlug)
+    ? await Product.findById(normalizedSlug).lean()
+    : await Product.findOne({ slug: normalizedSlug }).lean()
 
   if (!product) {
     return {
@@ -77,9 +84,6 @@ export default async function ProductDetailsPage({
     const fallbackProducts = await Product.find({}, { name: 1, slug: 1, price: 1, image: 1, category: 1, description: 1, stock: 1 }).lean()
     product = fallbackProducts.find((item) => toSlug(String(item.slug || item.name)) === normalizedSlug) || null
   }
-
-  console.log("Slug:", normalizedSlug)
-  console.log("Product:", product)
 
   if (!product) {
     notFound()

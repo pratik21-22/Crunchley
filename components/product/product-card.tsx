@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     console.error("Missing slug:", product)
   }
 
-  const routeParam = toSlug(product.slug || product.name)
+  const routeParam = product.slug ? toSlug(product.slug) : product.id
   const productHref = `/products/${encodeURIComponent(routeParam)}`
   const addItem = useCartStore((state) => state.addItem)
 

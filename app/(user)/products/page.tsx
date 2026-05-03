@@ -59,12 +59,13 @@ function isMongoObjectId(value: string | undefined): boolean {
 
 function normalizeProduct(item: ProductApiItem): ProductCardProps {
   const id = item._id ?? item.id
+  const slug = item.slug?.trim() ? item.slug : item.name
 
   return {
     id: isMongoObjectId(id) ? String(id) : "",
     _id: isMongoObjectId(item._id) ? item._id : isMongoObjectId(item.id) ? item.id : undefined,
     name: item.name,
-    slug: item.slug,
+    slug,
     price: item.price,
     originalPrice: item.originalPrice,
     image: item.image,
