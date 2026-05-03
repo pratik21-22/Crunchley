@@ -1,10 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useCartStore } from "@/store/cart"
 import { ShoppingBag, Star } from "lucide-react"
 import { trackEvent } from "@/lib/analytics"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 
 function toSlug(value: string): string {
   return value
@@ -35,8 +36,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     console.error("Missing slug:", product)
   }
 
-  const routeParam = product.slug ? toSlug(product.slug) : product.id
-  const productHref = `/products/${encodeURIComponent(routeParam)}`
+  const [previewOpen, setPreviewOpen] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -67,11 +67,16 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
     : null
 
   return (
-    <Link href={productHref} className="block group">
-      <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200/50 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-400 ease-out">
+    <>
+      <div className="group flex flex-col h-full bg-white rounded-2xl border border-slate-200/50 overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-400 ease-out">
 
         {/* Fixed Image Container - Full Bleed */}
-        <div className="relative w-full h-[200px] sm:h-[240px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50">
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="relative w-full h-[200px] sm:h-[240px] bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] overflow-hidden flex items-center justify-center border-b border-slate-100/50 cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2"
+          aria-label={`Preview ${product.name}`}
+        >
           {/* Discount badge */}
           {discount && (
             <div className="absolute top-4 left-4 z-10 bg-[#FFC107] text-[#2c1c02] text-[12px] font-black px-3 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,193,7,0.3)] backdrop-blur-sm">
@@ -83,10 +88,10 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-active:scale-105"
             priority={false}
           />
-        </div>
+        </button>
 
         {/* Product Info */}
         <div className="flex flex-col flex-1 p-5 sm:p-6 gap-3">
@@ -128,6 +133,34 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
         </div>
 
       </div>
-    </Link>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent showCloseButton className="max-w-[min(92vw,900px)] border-0 bg-transparent p-0 shadow-none">
+          <DialogTitle className="sr-only">{product.name} preview</DialogTitle>
+          <DialogDescription className="sr-only">Large product image preview</DialogDescription>
+
+          <div className="relative overflow-hidden rounded-3xl bg-[#FFFDF8] p-3 sm:p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/60">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FAF8F3] to-[#F5F3ED] aspect-square sm:aspect-[4/3]">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 92vw, 900px"
+                className="object-contain p-4 sm:p-6 animate-in zoom-in-95 duration-300"
+                priority
+              />
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 px-1 sm:px-2 pb-1">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-600">Preview</p>
+                <h3 className="text-lg sm:text-xl font-black text-[#1c1917] tracking-tight">{product.name}</h3>
+              </div>
+              <span className="text-sm font-semibold text-slate-500">₹{product.price}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
