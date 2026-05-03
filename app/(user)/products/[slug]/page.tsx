@@ -6,6 +6,7 @@ import type { Metadata } from "next"
 import { absoluteUrl, canonicalUrl } from "@/lib/seo"
 
 interface ProductDetail {
+  _id: string
   id: string
   name: string
   slug: string
@@ -66,6 +67,7 @@ export default async function ProductDetailsPage({
   }
 
   const normalizedProduct: ProductDetail = {
+    _id: String(product._id),
     id: String(product._id),
     name: product.name,
     slug: product.slug,
